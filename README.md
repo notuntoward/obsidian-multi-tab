@@ -2,6 +2,31 @@
 
 This plugin allows you to select and manage multiple tabs in Obsidian.
 
+## Usage Guide
+
+Once you have installed the plugin from the Obsidian Community Plugins store, you can manage multiple tabs using the following methods:
+
+### Selecting Tabs
+
+You can select multiple tabs in the same way you would select multiple files in your operating system:
+
+-   **Ctrl+Click:** Hold down the `Ctrl` key (or `Cmd` on macOS) and click on any tab to add it to your selection. Click a selected tab again to deselect it.
+-   **Shift+Click:** Select a tab, then hold down the `Shift` key and click another tab to select all the tabs in between.
+
+Selected tabs will be highlighted, making them easy to identify.
+
+### Running Commands on Selected Tabs
+
+After selecting your desired tabs, open the Obsidian Command Palette (`Ctrl+P` or `Cmd+P`) and search for "Multi Tab" to see the available commands. You can perform the following actions on all selected tabs at once:
+
+-   **Add Property to Selected Tabs**
+-   **Remove Property from Selected Tabs**
+-   **Add Tag to Selected Tabs**
+-   **Remove Tag from Selected Tabs**
+-   **Rename Tag in Selected Tabs**
+
+You can also run these commands on **all open tabs** in the current window.
+
 ## Development
 
 To get started with development, you'll need to configure your local vault paths.
