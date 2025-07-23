@@ -1,1 +1,1 @@
-Add install-plugin-test command
+Add personal vault install and open commands
