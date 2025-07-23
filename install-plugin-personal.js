@@ -1,11 +1,11 @@
 const fs = require('fs');
 const path = require('path');
+const { personalVaultPath } = require('./obsidian-vaults.config');
 
 const pluginDirName = 'obsidian-multi-tab';
-const personalVaultPath = process.env.OBSIDIAN_PERSONAL_VAULT_PATH;
 
 if (!personalVaultPath) {
-    console.error('Error: OBSIDIAN_PERSONAL_VAULT_PATH environment variable not set.');
+    console.error('Error: personalVaultPath not set in obsidian-vaults.config.js');
     process.exit(1);
 }
 

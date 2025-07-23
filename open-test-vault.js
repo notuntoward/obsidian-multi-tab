@@ -1,13 +1,14 @@
-const path = require('path');
-const { exec } = require('child_process');
+const open = require('open');
+const { testVaultPath } = require('./obsidian-vaults.config');
 
-const vaultName = 'obsidian-multi-tab-test-vault';
-const vaultPath = path.resolve(__dirname, 'test-vault');
+if (!testVaultPath) {
+    console.error('Error: testVaultPath not set in obsidian-vaults.config.js');
+    process.exit(1);
+}
 
-const uri = `obsidian://open?vault=${encodeURIComponent(vaultName)}&path=${encodeURIComponent(vaultPath)}`;
+const vaultName = require('path').basename(testVaultPath);
+const uri = `obsidian://open?vault=${encodeURIComponent(vaultName)}&path=${encodeURIComponent(testVaultPath)}`;
 
-exec(`start ${uri}`, (err) => {
-    if (err) {
-        console.error('Failed to open Obsidian:', err);
-    }
+open(uri).catch(err => {
+    console.error('Failed to open Obsidian:', err);
 });

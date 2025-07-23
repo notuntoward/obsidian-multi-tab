@@ -1,8 +1,14 @@
 const fs = require('fs');
 const path = require('path');
+const { testVaultPath } = require('./obsidian-vaults.config');
 
 const pluginDirName = 'obsidian-multi-tab';
-const testVaultPath = path.resolve(__dirname, 'test-vault');
+
+if (!testVaultPath) {
+    console.error('Error: testVaultPath not set in obsidian-vaults.config.js');
+    process.exit(1);
+}
+
 const pluginDestPath = path.join(testVaultPath, '.obsidian', 'plugins', pluginDirName);
 
 if (!fs.existsSync(pluginDestPath)) {
