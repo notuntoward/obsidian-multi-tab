@@ -10,7 +10,8 @@
     "open-test-vault": "node open-test-vault.js",
     "install-plugin-test": "node install-plugin-test.js",
     "install-plugin-personal": "node install-plugin-personal.js",
-    "open-personal-vault": "node open-personal-vault.js"
+    "open-personal-vault": "node open-personal-vault.js",
+    "test": "jest"
   },
   "keywords": [
     "obsidian",
@@ -21,14 +22,19 @@
   "license": "MIT",
   "devDependencies": {
     "@types/chai": "^5.2.2",
+    "@types/jest": "^30.0.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "^16.11.6",
     "builtin-modules": "3.3.0",
     "chai": "^5.2.1",
     "esbuild": "0.17.3",
+    "jest": "^30.0.5",
+    "jest-environment-obsidian": "^0.0.1",
     "jsdom": "^26.1.0",
     "mocha": "^11.7.1",
     "obsidian": "latest",
+    "ts-jest": "^29.4.0",
+    "ts-node": "^10.9.2",
     "tslib": "2.4.0",
     "typescript": "4.7.4"
   }
