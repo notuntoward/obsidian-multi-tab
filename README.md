@@ -42,7 +42,7 @@ To get started with development, you'll need to configure your local vault paths
     const path = require('path');
 
     module.exports = {
-        personalVaultPath: 'C:\Users\YourUser\Documents\Obsidian\PersonalVault',
+        personalVaultPath: 'C:\\Users\\YourUser\\Documents\\Obsidian\\PersonalVault',
         testVaultPath: path.resolve(__dirname, 'test-vault'),
     };
     ```
@@ -56,6 +56,10 @@ To get started with development, you'll need to configure your local vault paths
     ```bash
     npm run build
     ```
+
+### Manual Testing
+
+The `test-vault` directory contains a set of 10 notes with varying properties, designed for manual testing. To get started, open the `MANUAL-TESTING-GUIDE.md` note within the test vault for a complete walkthrough of all testing scenarios. This is a great way to familiarize yourself with the plugin's functionality.
 
 ## Available Scripts
 
