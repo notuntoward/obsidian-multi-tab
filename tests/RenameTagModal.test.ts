@@ -30,8 +30,8 @@ describe('RenameTagModal', () => {
         const renameButton = modal.contentEl.querySelector('button');
 
         if (textInputs.length === 2 && renameButton) {
-            const oldNameInput = textInputs[0];
-            const newNameInput = textInputs[1];
+            const oldNameInput = textInputs[0] as HTMLInputElement;
+            const newNameInput = textInputs[1] as HTMLInputElement;
 
             oldNameInput.value = 'old-tag';
             oldNameInput.dispatchEvent(new Event('change'));

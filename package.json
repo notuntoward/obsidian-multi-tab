@@ -7,11 +7,11 @@
     "dev": "node esbuild.config.mjs",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
     "version": "node version-bump.mjs && git add manifest.json versions.json",
-    "open-test-vault": "node open-test-vault.js",
-    "install-plugin-test": "node install-plugin-test.js",
-    "install-plugin-personal": "node install-plugin-personal.js",
-    "open-personal-vault": "node open-personal-vault.js",
-    "test": "jest"
+    "initialize-test-vault": "node initialize-test-vault.mjs",
+    "install-plugin-test": "node install-plugin-test.mjs",
+    "install-plugin-personal": "node install-plugin-personal.mjs",
+    "open-personal-vault": "node open-personal-vault.mjs",
+    "test": "node scripts/run-tests.js"
   },
   "keywords": [
     "obsidian",
@@ -21,10 +21,12 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
     "@types/jest": "^30.0.0",
     "@types/node": "^16.11.6",
     "builtin-modules": "3.3.0",
     "esbuild": "0.17.3",
+    "fs-extra": "^11.2.0",
     "jest": "^30.0.5",
     "jest-environment-obsidian": "^0.0.1",
     "jsdom": "^26.1.0",

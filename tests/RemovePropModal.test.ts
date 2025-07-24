@@ -30,7 +30,7 @@ describe('RemovePropModal', () => {
         const removeButton = modal.contentEl.querySelector('button');
 
         if (textInput && removeButton) {
-            textInput.value = 'prop-to-remove';
+            (textInput as HTMLInputElement).value = 'prop-to-remove';
             textInput.dispatchEvent(new Event('change'));
             removeButton.click();
         }

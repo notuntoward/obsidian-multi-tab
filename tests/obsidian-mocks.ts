@@ -76,6 +76,12 @@ class MockWorkspace {
         this.leaves.set(leaf.id, leaf);
         this.activeLeaf = leaf;
     }
+
+    openPopoutLeaf(): MockWorkspaceLeaf {
+        const newLeaf = new MockWorkspaceLeaf(`popout-${this.leaves.size + 1}`, null, this.app);
+        this.addLeaf(newLeaf);
+        return newLeaf;
+    }
 }
 
 class MockVault {
@@ -105,11 +111,58 @@ class MockWorkspaceLeaf {
     id: string;
     view: MockMarkdownView;
     parent: any;
+    openFile: () => Promise<void>;
+    open: () => Promise<void>;
+    setViewState: () => Promise<void>;
+    isDeferred: boolean;
+    loadIfDeferred: () => Promise<void>;
+    getEphemeralState: () => any;
+    setEphemeralState: (state: any) => void;
+    togglePinned: () => void;
+    getIcon: () => string;
+    getDisplayText: () => string;
+    on: (name: string, callback: (...data: any[]) => any) => void;
+    off: (name: string, callback: (...data: any[]) => any) => void;
+    offref: (ref: any) => void;
+    trigger: (name: string, ...data: any[]) => void;
+    detach: () => void;
+    setGroup: (group: string) => void;
+    getGroup: () => string;
+    setPinned: (pinned: boolean) => void;
+    getPinned: () => boolean;
+    rebuildView: () => void;
+    isEmpty: () => boolean;
+    tabHeaderEl: HTMLElement;
+    containerEl: HTMLElement;
+
 
     constructor(id: string, file: any, app: MockApp) {
         this.id = id;
         this.view = new MockMarkdownView(file);
         this.parent = { children: Array.from(app.workspace.leaves.values()) };
+        this.openFile = async () => {};
+        this.open = async () => {};
+        this.setViewState = async () => {};
+        this.isDeferred = false;
+        this.loadIfDeferred = async () => {};
+        this.getEphemeralState = () => ({});
+        this.setEphemeralState = () => {};
+        this.togglePinned = () => {};
+        this.getIcon = () => '';
+        this.getDisplayText = () => '';
+        this.on = () => {};
+        this.off = () => {};
+        this.offref = () => {};
+        this.trigger = () => {};
+        this.detach = () => {};
+        this.setGroup = () => {};
+        this.getGroup = () => '';
+        this.setPinned = () => {};
+        this.getPinned = () => false;
+        this.rebuildView = () => {};
+        this.isEmpty = () => false;
+        this.tabHeaderEl = document.createElement('div');
+        this.containerEl = document.createElement('div');
     }
 
     getViewState() {
@@ -271,7 +324,14 @@ module.exports = {
     App: MockApp,
     Plugin: MockPlugin,
     Modal: MockModal,
-    Notice: jest.fn(),
+    Notice: jest.fn().mockImplementation((message: string) => {
+        // You can add logic here to store the message and assert it in tests
+        console.log(`Mock Notice: ${message}`);
+        return {
+            message: message,
+            hide: jest.fn(),
+        };
+    }),
     PluginSettingTab: jest.fn(),
     Setting: MockSetting,
     TFile: jest.fn(),

@@ -41,7 +41,7 @@ describe('MultiTabPlugin', () => {
         });
 
         it('should add a property to tabs', async () => {
-            await plugin.addPropertyToTabs([leaf1, leaf2], 'new-prop', 'new-value');
+            await plugin.addPropertyToTabs([leaf1, leaf2] as any, 'new-prop', 'new-value');
             expect(file1.frontmatter['new-prop']).toBe('new-value');
             expect(file2.frontmatter['new-prop']).toBe('new-value');
         });
@@ -50,13 +50,13 @@ describe('MultiTabPlugin', () => {
             file1.frontmatter['prop-to-remove'] = 'value';
             file2.frontmatter['prop-to-remove'] = 'value';
 
-            await plugin.removePropertyFromTabs([leaf1, leaf2], 'prop-to-remove');
+            await plugin.removePropertyFromTabs([leaf1, leaf2] as any, 'prop-to-remove');
             expect(file1.frontmatter['prop-to-remove']).toBeUndefined();
             expect(file2.frontmatter['prop-to-remove']).toBeUndefined();
         });
 
         it('should add a tag to tabs', async () => {
-            await plugin.addTagToTabs([leaf1, leaf2], 'new-tag');
+            await plugin.addTagToTabs([leaf1, leaf2] as any, 'new-tag');
             expect(file1.frontmatter.tags).toContain('new-tag');
             expect(file2.frontmatter.tags).toContain('new-tag');
         });
@@ -65,7 +65,7 @@ describe('MultiTabPlugin', () => {
             file1.frontmatter.tags = ['tag-to-remove'];
             file2.frontmatter.tags = ['tag-to-remove'];
 
-            await plugin.removeTagFromTabs([leaf1, leaf2], 'tag-to-remove');
+            await plugin.removeTagFromTabs([leaf1, leaf2] as any, 'tag-to-remove');
             expect(file1.frontmatter.tags).not.toContain('tag-to-remove');
             expect(file2.frontmatter.tags).not.toContain('tag-to-remove');
         });
@@ -74,7 +74,7 @@ describe('MultiTabPlugin', () => {
             file1.frontmatter.tags = ['old-tag'];
             file2.frontmatter.tags = ['old-tag'];
 
-            await plugin.renameTagInTabs([leaf1, leaf2], 'old-tag', 'new-tag');
+            await plugin.renameTagInTabs([leaf1, leaf2] as any, 'old-tag', 'new-tag');
             expect(file1.frontmatter.tags).not.toContain('old-tag');
             expect(file1.frontmatter.tags).toContain('new-tag');
             expect(file2.frontmatter.tags).not.toContain('old-tag');

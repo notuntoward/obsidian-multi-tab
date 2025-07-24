@@ -30,7 +30,7 @@ describe('RemoveTagModal', () => {
         const removeButton = modal.contentEl.querySelector('button');
 
         if (textInput && removeButton) {
-            textInput.value = 'tag-to-remove';
+            (textInput as HTMLInputElement).value = 'tag-to-remove';
             textInput.dispatchEvent(new Event('change'));
             removeButton.click();
         }

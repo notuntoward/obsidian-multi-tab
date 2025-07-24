@@ -1,0 +1,7 @@
+Error
+
+Vault not found.
+
+Unable to find a vault for the URL
+obsi ...: //open/?path=c%3A%5CUsers%5Cscott%5Crepos%5Cobsidian-multi-tab%5Ctest-vault
+

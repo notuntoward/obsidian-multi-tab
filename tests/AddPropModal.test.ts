@@ -30,8 +30,8 @@ describe('AddPropModal', () => {
         const addButton = modal.contentEl.querySelector('button');
 
         if (textInputs.length === 2 && addButton) {
-            const nameInput = textInputs[0];
-            const valueInput = textInputs[1];
+            const nameInput = textInputs[0] as HTMLInputElement;
+            const valueInput = textInputs[1] as HTMLInputElement;
 
             nameInput.value = 'new-prop';
             nameInput.dispatchEvent(new Event('change'));

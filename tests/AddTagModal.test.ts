@@ -30,7 +30,7 @@ describe('AddTagModal', () => {
         const addButton = modal.contentEl.querySelector('button');
 
         if (textInput && addButton) {
-            textInput.value = 'new-tag';
+            (textInput as HTMLInputElement).value = 'new-tag';
             textInput.dispatchEvent(new Event('change'));
             addButton.click();
         }

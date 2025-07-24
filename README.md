@@ -1,73 +1,73 @@
 # Obsidian Multi-Tab Plugin
 
-This plugin allows you to select and manage multiple tabs in Obsidian.
+This plugin allows you to select and manage multiple tabs in Obsidian at once, streamlining your workflow when dealing with many open notes.
 
-## Usage Guide
+## Features
 
-Once you have installed the plugin from the Obsidian Community Plugins store, you can manage multiple tabs using the following methods:
+-   **Select Multiple Tabs:** Use `Ctrl/Cmd+Click` to select individual tabs or `Shift+Click` to select a range of tabs.
+-   **Run Commands on Selections:** Perform actions like adding/removing properties and tags on all selected tabs simultaneously.
+-   **Run Commands on All Tabs:** Apply commands to every open tab in the current window without needing to select them first.
 
-### Selecting Tabs
+---
 
-You can select multiple tabs in the same way you would select multiple files in your operating system:
+## Development Guide
 
--   **Ctrl+Click:** Hold down the `Ctrl` key (or `Cmd` on macOS) and click on any tab to add it to your selection. Click a selected tab again to deselect it.
--   **Shift+Click:** Select a tab, then hold down the `Shift` key and click another tab to select all the tabs in between.
+Follow these instructions to set up a local development environment. This project requires a dedicated, separate Obsidian vault for running automated tests.
 
-Selected tabs will be highlighted, making them easy to identify.
+### Prerequisites
 
-### Running Commands on Selected Tabs
+-   [Node.js](https://nodejs.org/)
+-   The [Obsidian](https://obsidian.md/) application.
 
-After selecting your desired tabs, open the Obsidian Command Palette (`Ctrl+P` or `Cmd+P`) and search for "Multi Tab" to see the available commands. You can perform the following actions on all selected tabs at once:
+### Step 1: Create and Configure the Test Vault
 
--   **Add Property to Selected Tabs**
--   **Remove Property from Selected Tabs**
--   **Add Tag to Selected Tabs**
--   **Remove Tag from Selected Tabs**
--   **Rename Tag in Selected Tabs**
+1.  **Create a New Vault:** Open the Obsidian application and create a new, empty vault. This vault will be used exclusively for running automated tests. You can name it anything you like (e.g., "Multi-Tab Test Vault").
+2.  **Set the Environment Variable:** You must tell the project scripts where to find this new vault by setting the `OBSIDIAN_TEST_VAULT_PATH` environment variable. Set it to the **absolute path** of the test vault you just created.
 
-You can also run these commands on **all open tabs** in the current window.
-
-## Development
-
-To get started with development, you'll need to configure your local vault paths.
-
-1.  **Duplicate the Example Config:**
-    Copy the `obsidian-vaults.config.example.js` file and rename it to `obsidian-vaults.config.js`.
-
-2.  **Configure Your Vaults:**
-    Edit `obsidian-vaults.config.js` to add the absolute paths to your personal and test vaults.
-
-    ```javascript
-    // obsidian-vaults.config.js
-    const path = require('path');
-
-    module.exports = {
-        personalVaultPath: 'C:\\Users\\YourUser\\Documents\\Obsidian\\PersonalVault',
-        testVaultPath: path.resolve(__dirname, 'test-vault'),
-    };
+    **Windows (PowerShell):**
+    ```powershell
+    $env:OBSIDIAN_TEST_VAULT_PATH="C:\Users\YourUser\Documents\Obsidian\Multi-Tab-Test-Vault"
     ```
 
-3.  **Install Dependencies:**
+    **macOS/Linux (bash/zsh):**
     ```bash
-    npm install
+    export OBSIDIAN_TEST_VAULT_PATH="/Users/YourUser/Documents/Obsidian/Multi-Tab-Test-Vault"
     ```
 
-4.  **Run the Build:**
+### Step 2: Initial Project Setup
+
+Clone the repository and install the necessary Node.js dependencies.
+
+```bash
+git clone https://github.com/your-username/obsidian-multi-tab.git
+cd obsidian-multi-tab
+npm install
+```
+
+### Step 3: Initialize the Test Vault
+
+Now, run the initialization script. This command will copy the necessary test notes from the `test-notes` directory into your configured test vault and then attempt to open the vault in Obsidian.
+
+```bash
+npm run initialize-test-vault
+```
+
+### Step 4: Build and Test
+
+1.  **Build the Plugin:** Compile the TypeScript source into `main.js`.
     ```bash
     npm run build
     ```
+    *(Use `npm run dev` for automatic rebuilding during development.)*
 
-### Manual Testing
+2.  **Run Tests:** Execute the automated test suite. This command will first install the latest build of the plugin into your test vault and then run the tests.
+    ```bash
+    npm test
+    ```
 
-The `test-vault` directory contains a set of 10 notes with varying properties, designed for manual testing. To get started, open the `MANUAL-TESTING-GUIDE.md` note within the test vault for a complete walkthrough of all testing scenarios. This is a great way to familiarize yourself with the plugin's functionality.
+### Personal Vault Scripts (Optional)
 
-## Available Scripts
+If you want to install the plugin in your primary, day-to-day vault for manual testing, you must set the `OBSIDIAN_PERSONAL_VAULT_PATH` environment variable.
 
--   `npm run dev`: Watch for changes and rebuild the plugin automatically.
--   `npm run build`: Build the plugin for production.
--   `npm test`: Run the Jest test suite.
--   `npm run install-plugin-test`: Install the plugin in the test vault.
--   `npm run open-test-vault`: Open the test vault in Obsidian.
--   `npm run install-plugin-personal`: Install the plugin in your personal vault.
--   `npm run open-personal-vault`: Open your personal vault in Obsidian.
-
+-   `npm run install-plugin-personal`: Copies the plugin into your personal vault.
+-   `npm run open-personal-vault`: Opens your personal vault in Obsidian.

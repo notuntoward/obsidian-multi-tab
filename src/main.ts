@@ -257,7 +257,7 @@ export default class MultiTabPlugin extends Plugin {
         if (!parent || !('children' in parent)) {
             return;
         }
-        const children = parent.children as WorkspaceLeaf[];
+        const children = (parent as any).children as WorkspaceLeaf[];
         const lastActiveIndex = children.indexOf(this.lastActiveTab);
         const currentIndex = children.indexOf(leaf);
 
@@ -310,7 +310,7 @@ export default class MultiTabPlugin extends Plugin {
         const filePaths: string[] = [];
         this.selectedTabs.forEach(leaf => {
             const viewState = leaf.getViewState();
-            if (viewState.type === 'markdown' && viewState.state?.file) {
+            if (viewState.type === 'markdown' && viewState.state?.file && typeof viewState.state.file === 'string') {
                 const file = this.app.vault.getAbstractFileByPath(viewState.state.file);
                 if (file instanceof TFile) {
                     filePaths.push(file.path);

@@ -118,5 +118,4 @@ dist/
 test-vault/
 
 # VSCode
-.vscode/
-\"obsidian-vaults.config.js\" 
+.vscode/ 
