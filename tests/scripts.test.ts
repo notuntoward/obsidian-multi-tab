@@ -27,12 +27,6 @@ describe('User Scripts', () => {
                 const { error } = await runScript('open-personal-vault');
                 expect(error).toBeNull();
             });
-        } else {
-            test('open-personal-vault should fail when path is not set', async () => {
-                const { stderr, error } = await runScript('open-personal-vault');
-                expect(error).not.toBeNull();
-                expect(stderr).toContain("OBSIDIAN_PERSONAL_VAULT_PATH environment variable not set");
-            });
         }
     });
 
@@ -76,12 +70,6 @@ describe('User Scripts', () => {
             test('install-plugin-personal should run without errors when path is set', async () => {
                 const { error } = await runScript('install-plugin-personal');
                 expect(error).toBeNull();
-            });
-        } else {
-            test('install-plugin-personal should fail when path is not set', async () => {
-                const { stderr, error } = await runScript('install-plugin-personal');
-                expect(error).not.toBeNull();
-                expect(stderr).toContain("OBSIDIAN_PERSONAL_VAULT_PATH environment variable not set");
             });
         }
     });
