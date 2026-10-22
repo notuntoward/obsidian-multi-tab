@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { RemoveTagModal } from '../src/RemoveTagModal';
 import { MockApp } from './obsidian-mocks';
 
@@ -22,7 +23,7 @@ describe('RemoveTagModal', () => {
     });
 
     it('should call the onSubmit callback with the tag name when the remove button is clicked', () => {
-        const onSubmit = jest.fn();
+        const onSubmit = vi.fn();
         const modal = new RemoveTagModal(app as any, onSubmit);
         modal.onOpen();
 

@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { RenameTagModal } from '../src/RenameTagModal';
 import { MockApp } from './obsidian-mocks';
 
@@ -22,7 +23,7 @@ describe('RenameTagModal', () => {
     });
 
     it('should call the onSubmit callback with the old and new tag names when the rename button is clicked', () => {
-        const onSubmit = jest.fn();
+        const onSubmit = vi.fn();
         const modal = new RenameTagModal(app as any, onSubmit);
         modal.onOpen();
 

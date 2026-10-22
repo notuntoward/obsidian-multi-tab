@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { AddPropModal } from '../src/AddPropModal';
 import { MockApp } from './obsidian-mocks';
 
@@ -22,7 +23,7 @@ describe('AddPropModal', () => {
     });
 
     it('should call the onSubmit callback with the property name and value when the add button is clicked', () => {
-        const onSubmit = jest.fn();
+        const onSubmit = vi.fn();
         const modal = new AddPropModal(app as any, onSubmit);
         modal.onOpen();
 

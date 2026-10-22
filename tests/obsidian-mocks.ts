@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 // tests/obsidian-mocks.ts
 
 // This file mocks the 'obsidian' module.
@@ -302,39 +303,72 @@ class MockPlugin {
     }
 }
 
-// --- Exports ---
-// Export all the mock classes so they can be used by Jest
+
+class MockTFile {
+    path: string;
+    name: string;
+    basename: string;
+    extension: string;
+    frontmatter: any;
+
+    constructor(path = '', name = '', frontmatter: any = {}) {
+        this.path = path;
+        this.name = name || path.split('/').pop() || '';
+        this.extension = this.name.includes('.') ? this.name.split('.').pop() || '' : '';
+        this.basename = this.extension ? this.name.slice(0, -(this.extension.length + 1)) : this.name;
+        this.frontmatter = frontmatter;
+    }
+}
+
+class MockEditor {}
+
+
+const Notice = vi.fn().mockImplementation((message: string) => {
+    return {
+        message: message,
+        hide: vi.fn(),
+    };
+});
+
+const PluginSettingTab = vi.fn();
+
 export {
     MockApp,
+    MockApp as App,
     MockWorkspace,
+    MockWorkspace as Workspace,
     MockVault,
+    MockVault as Vault,
     MockFileManager,
+    MockFileManager as FileManager,
     MockWorkspaceLeaf,
+    MockWorkspaceLeaf as WorkspaceLeaf,
     MockMarkdownView,
+    MockMarkdownView as MarkdownView,
     MockModal,
-    MockPlugin as Plugin, // Export MockPlugin as Plugin to match Obsidian's naming
+    MockModal as Modal,
+    MockSetting,
+    MockSetting as Setting,
+    MockPlugin,
+    MockPlugin as Plugin,
+    MockTFile as TFile,
+    MockEditor as Editor,
+    Notice,
+    PluginSettingTab,
 };
 
-
-// --- Mocking the 'obsidian' module ---
-// This is the part that Jest's moduleNameMapper will use.
-// It needs to export everything that the plugin code imports from 'obsidian'.
-module.exports = {
-    ...jest.requireActual('obsidian'), // Use actual 'obsidian' for enums, etc.
+export default {
     App: MockApp,
     Plugin: MockPlugin,
     Modal: MockModal,
-    Notice: jest.fn().mockImplementation((message: string) => {
-        // You can add logic here to store the message and assert it in tests
-        console.log(`Mock Notice: ${message}`);
-        return {
-            message: message,
-            hide: jest.fn(),
-        };
-    }),
-    PluginSettingTab: jest.fn(),
+    Notice,
+    PluginSettingTab,
     Setting: MockSetting,
-    TFile: jest.fn(),
+    TFile: MockTFile,
+    Editor: MockEditor,
     WorkspaceLeaf: MockWorkspaceLeaf,
     MarkdownView: MockMarkdownView,
+    Workspace: MockWorkspace,
+    Vault: MockVault,
+    FileManager: MockFileManager,
 };

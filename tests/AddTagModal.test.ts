@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { AddTagModal } from '../src/AddTagModal';
 import { MockApp } from './obsidian-mocks';
 
@@ -22,7 +23,7 @@ describe('AddTagModal', () => {
     });
 
     it('should call the onSubmit callback with the tag name when the add button is clicked', () => {
-        const onSubmit = jest.fn();
+        const onSubmit = vi.fn();
         const modal = new AddTagModal(app as any, onSubmit);
         modal.onOpen();
 

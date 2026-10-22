@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { RemovePropModal } from '../src/RemovePropModal';
 import { MockApp } from './obsidian-mocks';
 
@@ -22,7 +23,7 @@ describe('RemovePropModal', () => {
     });
 
     it('should call the onSubmit callback with the property name when the remove button is clicked', () => {
-        const onSubmit = jest.fn();
+        const onSubmit = vi.fn();
         const modal = new RemovePropModal(app as any, onSubmit);
         modal.onOpen();
 

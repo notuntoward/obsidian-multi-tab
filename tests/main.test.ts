@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import MultiTabPlugin from '../src/main';
 import { MockApp, MockWorkspace, MockWorkspaceLeaf } from './obsidian-mocks';
 import { TFile } from 'obsidian';
