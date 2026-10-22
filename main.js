@@ -29,6 +29,305 @@ __export(main_exports, {
 module.exports = __toCommonJS(main_exports);
 var import_obsidian6 = require("obsidian");
 
+// ../obsidian-commons/src/internals.ts
+var leafOf = (leaf) => leaf != null ? leaf : void 0;
+var workspaceOf = (app) => app.workspace;
+function getLeafId(leaf) {
+  var _a, _b;
+  return (_b = (_a = leafOf(leaf)) == null ? void 0 : _a.id) != null ? _b : "";
+}
+function isLeafDetached(leaf) {
+  var _a;
+  return !leaf || ((_a = leafOf(leaf)) == null ? void 0 : _a.detached) === true;
+}
+function getTabHeaderEl(leaf) {
+  var _a, _b;
+  return (_b = (_a = leafOf(leaf)) == null ? void 0 : _a.tabHeaderEl) != null ? _b : null;
+}
+function getGroupChildren(group) {
+  const children = group == null ? void 0 : group.children;
+  return Array.isArray(children) ? children : null;
+}
+function getActiveWindow() {
+  return typeof activeWindow === "undefined" ? void 0 : activeWindow;
+}
+function liveWindow(win) {
+  return win && !win.closed ? win : void 0;
+}
+function getWindowForContainer(container) {
+  var _a, _b, _c, _d, _e, _f, _g;
+  try {
+    const c = container;
+    return liveWindow(
+      (_g = (_d = (_b = c == null ? void 0 : c.win) != null ? _b : (_a = c == null ? void 0 : c.doc) == null ? void 0 : _a.defaultView) != null ? _d : (_c = c == null ? void 0 : c.containerEl) == null ? void 0 : _c.win) != null ? _g : (_f = (_e = c == null ? void 0 : c.containerEl) == null ? void 0 : _e.ownerDocument) == null ? void 0 : _f.defaultView
+    );
+  } catch (e) {
+    return void 0;
+  }
+}
+function getWindowForLeaf(leaf) {
+  var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m;
+  const l = leafOf(leaf);
+  if (!l || l.detached) return void 0;
+  try {
+    return liveWindow(
+      (_m = (_i = (_f = (_c = getWindowForContainer((_a = l.getContainer) == null ? void 0 : _a.call(l))) != null ? _c : (_b = l.containerEl) == null ? void 0 : _b.win) != null ? _f : (_e = (_d = l.containerEl) == null ? void 0 : _d.ownerDocument) == null ? void 0 : _e.defaultView) != null ? _i : (_h = (_g = l.view) == null ? void 0 : _g.containerEl) == null ? void 0 : _h.win) != null ? _m : (_l = (_k = (_j = l.view) == null ? void 0 : _j.containerEl) == null ? void 0 : _k.ownerDocument) == null ? void 0 : _l.defaultView
+    );
+  } catch (e) {
+    return void 0;
+  }
+}
+function getMainWindow(app) {
+  var _a, _b;
+  try {
+    const fromRoot = getWindowForContainer(workspaceOf(app).rootSplit);
+    if (fromRoot) return fromRoot;
+    const fromElement = liveWindow((_b = (_a = workspaceOf(app).containerEl) == null ? void 0 : _a.ownerDocument) == null ? void 0 : _b.defaultView);
+    if (fromElement) return fromElement;
+  } catch (e) {
+  }
+  return typeof window === "undefined" ? void 0 : liveWindow(window);
+}
+function isSidebarLeaf(app, leaf) {
+  var _a, _b;
+  try {
+    const root = (_b = (_a = leafOf(leaf)) == null ? void 0 : _a.getRoot) == null ? void 0 : _b.call(_a);
+    if (root === void 0 || root === null) return false;
+    const ws = workspaceOf(app);
+    return root === ws.leftSplit || root === ws.rightSplit;
+  } catch (e) {
+    return false;
+  }
+}
+function isMainLeaf(app, leaf) {
+  var _a, _b, _c;
+  if (isLeafDetached(leaf) || !leaf) return false;
+  try {
+    const l = leafOf(leaf);
+    const root = (_a = l == null ? void 0 : l.getRoot) == null ? void 0 : _a.call(l);
+    if (root && root === workspaceOf(app).rootSplit) return true;
+    if (((_c = (_b = l == null ? void 0 : l.getContainer) == null ? void 0 : _b.call(l)) == null ? void 0 : _c.winType) === "root") return true;
+  } catch (e) {
+  }
+  const win = getWindowForLeaf(leaf);
+  const main = getMainWindow(app);
+  return !!win && !!main && win === main;
+}
+function getGroupRect(group) {
+  try {
+    const el = group == null ? void 0 : group.containerEl;
+    if (el && typeof el.getBoundingClientRect === "function") {
+      const rect = el.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        return { x: rect.left, y: rect.top, w: rect.width, h: rect.height };
+      }
+    }
+  } catch (e) {
+  }
+  return null;
+}
+
+// ../obsidian-commons/src/geometry/geometry.ts
+function relativeDirection(target, ref) {
+  if (!target || !ref) return null;
+  const dx = target.x + target.w / 2 - (ref.x + ref.w / 2);
+  const dy = target.y + target.h / 2 - (ref.y + ref.h / 2);
+  if (Math.abs(dx) > Math.abs(dy)) return dx > 0 ? "right" : "left";
+  return dy > 0 ? "below" : "above";
+}
+
+// ../obsidian-commons/src/workspace/recency.ts
+var LeafRecency = class {
+  constructor() {
+    this.lastActive = /* @__PURE__ */ new Map();
+  }
+  touch(leaf, now = Date.now()) {
+    if (!leaf) return;
+    const id = getLeafId(leaf);
+    if (id) this.lastActive.set(id, now);
+  }
+  get(leaf) {
+    var _a;
+    return (_a = this.lastActive.get(getLeafId(leaf))) != null ? _a : 0;
+  }
+  /**
+   * More recent compares greater. Leaves with no recorded time fall back to a
+   * stable id comparison so order is deterministic before the first activation.
+   */
+  compare(a, b) {
+    const diff = this.get(a) - this.get(b);
+    if (diff !== 0) return diff;
+    return getLeafId(a).localeCompare(getLeafId(b));
+  }
+  pickMostRecent(leaves) {
+    return [...leaves].sort((a, b) => this.compare(a, b))[leaves.length - 1];
+  }
+  /** Drops entries of leaves that no longer exist. Cheap no-op while the map is small. */
+  prune(app, threshold = 200) {
+    if (this.lastActive.size <= threshold) return;
+    const live = /* @__PURE__ */ new Set();
+    app.workspace.iterateAllLeaves((leaf) => {
+      live.add(getLeafId(leaf));
+    });
+    for (const id of [...this.lastActive.keys()]) {
+      if (!live.has(id)) this.lastActive.delete(id);
+    }
+  }
+  get size() {
+    return this.lastActive.size;
+  }
+};
+var NO_RECENCY = new LeafRecency();
+
+// ../obsidian-commons/src/workspace/model.ts
+function getEditorLeafLocations(app) {
+  var _a;
+  const locations = [];
+  if (typeof ((_a = app == null ? void 0 : app.workspace) == null ? void 0 : _a.iterateAllLeaves) !== "function") return locations;
+  app.workspace.iterateAllLeaves((leaf) => {
+    var _a2;
+    if (isLeafDetached(leaf) || isSidebarLeaf(app, leaf)) return;
+    const win = getWindowForLeaf(leaf);
+    if (!win) return;
+    locations.push({ leaf, window: win, group: (_a2 = leaf.parent) != null ? _a2 : null });
+  });
+  return locations;
+}
+function compareById(a, b) {
+  return getLeafId(a).localeCompare(getLeafId(b));
+}
+function buildTabGroups(locations, activeLeaf, recency = NO_RECENCY) {
+  var _a;
+  const byWindow = /* @__PURE__ */ new Map();
+  for (const { window: win, group, leaf } of locations) {
+    if (!group) continue;
+    let inWindow = byWindow.get(win);
+    if (!inWindow) byWindow.set(win, inWindow = /* @__PURE__ */ new Map());
+    const leaves = inWindow.get(group);
+    if (leaves) leaves.push(leaf);
+    else inWindow.set(group, [leaf]);
+  }
+  const activeWin = getWindowForLeaf(activeLeaf);
+  const activeGroup = (_a = activeLeaf == null ? void 0 : activeLeaf.parent) != null ? _a : null;
+  const activeRect = activeGroup ? getGroupRect(activeGroup) : null;
+  const groups = [];
+  for (const [win, inWindow] of byWindow) {
+    for (const [group, leaves] of inWindow) {
+      const representative = [...leaves].sort((a, b) => recency.compare(a, b))[leaves.length - 1];
+      const isCurrent = win === activeWin && group === activeGroup;
+      const direction = !isCurrent && win === activeWin && activeRect ? relativeDirection(getGroupRect(group), activeRect) : null;
+      groups.push({
+        group,
+        window: win,
+        leaves,
+        representative,
+        lastActive: recency.get(representative),
+        isCurrent,
+        direction
+      });
+    }
+  }
+  return groups.sort(
+    (a, b) => b.lastActive - a.lastActive || compareById(a.representative, b.representative)
+  );
+}
+function buildTabEntries(groups, recency = NO_RECENCY) {
+  return groups.flatMap((group) => group.leaves.map((leaf) => ({ leaf, group, lastActive: recency.get(leaf) }))).sort((a, b) => b.lastActive - a.lastActive || compareById(a.leaf, b.leaf));
+}
+function buildWindowEntries(app, groups, activeLeaf, recency = NO_RECENCY) {
+  const byWindow = /* @__PURE__ */ new Map();
+  for (const group of groups) {
+    const list = byWindow.get(group.window);
+    if (list) list.push(group);
+    else byWindow.set(group.window, [group]);
+  }
+  const currentWin = getWindowForLeaf(activeLeaf);
+  const mainWin = getMainWindow(app);
+  const entries = [];
+  let popouts = 0;
+  for (const [win, windowGroups] of byWindow) {
+    const sorted = [...windowGroups].sort(
+      (a, b) => b.lastActive - a.lastActive || compareById(a.representative, b.representative)
+    );
+    const isMain = win === mainWin || sorted.some((g) => g.leaves.some((l) => isMainLeaf(app, l)));
+    const representative = sorted[0].representative;
+    entries.push({
+      window: win,
+      groups: sorted,
+      representative,
+      lastActive: recency.get(representative),
+      isCurrent: win === currentWin,
+      isMain,
+      popoutOrdinal: isMain ? null : popouts += 1
+    });
+  }
+  return entries.sort(
+    (a, b) => b.lastActive - a.lastActive || compareById(a.representative, b.representative)
+  );
+}
+function buildNavigationModel(app, activeLeaf, options = {}) {
+  var _a;
+  const recency = (_a = options.recency) != null ? _a : NO_RECENCY;
+  const locations = getEditorLeafLocations(app);
+  const groups = buildTabGroups(locations, activeLeaf, recency);
+  const tabs = buildTabEntries(groups, recency);
+  const windows = buildWindowEntries(app, groups, activeLeaf, recency);
+  return { locations, windows, groups, tabs };
+}
+function getTabsInWindow(model, win) {
+  return model.tabs.filter((t) => t.group.window === win);
+}
+
+// ../obsidian-commons/src/windows/windows.ts
+function existingWindows(app) {
+  const windows = /* @__PURE__ */ new Set();
+  const main = getMainWindow(app);
+  if (main) windows.add(main);
+  for (const loc of getEditorLeafLocations(app)) windows.add(loc.window);
+  return [...windows];
+}
+function forEachWindow(plugin, setup) {
+  const app = plugin.app;
+  const cleanups = /* @__PURE__ */ new Map();
+  const add = (win) => {
+    var _a;
+    if (!win || win.closed || cleanups.has(win)) return;
+    try {
+      cleanups.set(win, (_a = setup(win)) != null ? _a : void 0);
+    } catch (error) {
+      cleanups.set(win, void 0);
+      console.error("commons/forEachWindow: setup failed", error);
+    }
+  };
+  const remove = (win) => {
+    if (!win || !cleanups.has(win)) return;
+    const cleanup = cleanups.get(win);
+    cleanups.delete(win);
+    try {
+      cleanup == null ? void 0 : cleanup();
+    } catch (error) {
+      console.error("commons/forEachWindow: cleanup failed", error);
+    }
+  };
+  add(getMainWindow(app));
+  app.workspace.onLayoutReady(() => existingWindows(app).forEach(add));
+  plugin.registerEvent(app.workspace.on("window-open", (_ww, win) => add(win)));
+  plugin.registerEvent(app.workspace.on("window-close", (_ww, win) => remove(win)));
+  plugin.register(() => [...cleanups.keys()].forEach(remove));
+}
+
+// ../obsidian-commons/src/workspace/actions.ts
+function getActiveLeafInFocusedWindow(app) {
+  const globalActive = app.workspace.activeLeaf;
+  const usable = (leaf) => !!leaf && !isLeafDetached(leaf) && !isSidebarLeaf(app, leaf);
+  const focused = getActiveWindow();
+  if (!focused) return usable(globalActive) ? globalActive : null;
+  if (usable(globalActive) && getWindowForLeaf(globalActive) === focused) return globalActive;
+  const inFocused = getEditorLeafLocations(app).find((loc) => loc.window === focused);
+  if (inFocused) return inFocused.leaf;
+  return usable(globalActive) ? globalActive : null;
+}
+
 // src/AddPropModal.ts
 var import_obsidian = require("obsidian");
 var AddPropModal = class extends import_obsidian.Modal {
@@ -214,8 +513,7 @@ var MultiTabPlugin = class extends import_obsidian6.Plugin {
       name: "Add Property to All Tabs in Window",
       callback: () => {
         new AddPropModal(this.app, (name, value) => {
-          const leaves = this.app.workspace.getLeavesOfType("markdown");
-          this.addPropertyToTabs(leaves, name, value);
+          this.addPropertyToTabs(this.getTabsInCurrentWindow(), name, value);
         }).open();
       }
     });
@@ -224,8 +522,7 @@ var MultiTabPlugin = class extends import_obsidian6.Plugin {
       name: "Remove Property from All Tabs in Window",
       callback: () => {
         new RemovePropModal(this.app, (name) => {
-          const leaves = this.app.workspace.getLeavesOfType("markdown");
-          this.removePropertyFromTabs(leaves, name);
+          this.removePropertyFromTabs(this.getTabsInCurrentWindow(), name);
         }).open();
       }
     });
@@ -234,8 +531,7 @@ var MultiTabPlugin = class extends import_obsidian6.Plugin {
       name: "Add Tag to All Tabs in Window",
       callback: () => {
         new AddTagModal(this.app, (name) => {
-          const leaves = this.app.workspace.getLeavesOfType("markdown");
-          this.addTagToTabs(leaves, name);
+          this.addTagToTabs(this.getTabsInCurrentWindow(), name);
         }).open();
       }
     });
@@ -244,8 +540,7 @@ var MultiTabPlugin = class extends import_obsidian6.Plugin {
       name: "Remove Tag from All Tabs in Window",
       callback: () => {
         new RemoveTagModal(this.app, (name) => {
-          const leaves = this.app.workspace.getLeavesOfType("markdown");
-          this.removeTagFromTabs(leaves, name);
+          this.removeTagFromTabs(this.getTabsInCurrentWindow(), name);
         }).open();
       }
     });
@@ -254,8 +549,7 @@ var MultiTabPlugin = class extends import_obsidian6.Plugin {
       name: "Rename Tag in All Tabs in Window",
       callback: () => {
         new RenameTagModal(this.app, (oldName, newName) => {
-          const leaves = this.app.workspace.getLeavesOfType("markdown");
-          this.renameTagInTabs(leaves, oldName, newName);
+          this.renameTagInTabs(this.getTabsInCurrentWindow(), oldName, newName);
         }).open();
       }
     });
@@ -264,8 +558,7 @@ var MultiTabPlugin = class extends import_obsidian6.Plugin {
       name: "Add Property to All open Tabs",
       callback: () => {
         new AddPropModal(this.app, (name, value) => {
-          const leaves = this.app.workspace.getLeavesOfType("markdown");
-          this.addPropertyToTabs(leaves, name, value);
+          this.addPropertyToTabs(this.getAllOpenMarkdownLeaves(), name, value);
         }).open();
       }
     });
@@ -274,8 +567,7 @@ var MultiTabPlugin = class extends import_obsidian6.Plugin {
       name: "Remove Property from All open Tabs",
       callback: () => {
         new RemovePropModal(this.app, (name) => {
-          const leaves = this.app.workspace.getLeavesOfType("markdown");
-          this.removePropertyFromTabs(leaves, name);
+          this.removePropertyFromTabs(this.getAllOpenMarkdownLeaves(), name);
         }).open();
       }
     });
@@ -284,8 +576,7 @@ var MultiTabPlugin = class extends import_obsidian6.Plugin {
       name: "Add Tag to All open Tabs",
       callback: () => {
         new AddTagModal(this.app, (name) => {
-          const leaves = this.app.workspace.getLeavesOfType("markdown");
-          this.addTagToTabs(leaves, name);
+          this.addTagToTabs(this.getAllOpenMarkdownLeaves(), name);
         }).open();
       }
     });
@@ -294,8 +585,7 @@ var MultiTabPlugin = class extends import_obsidian6.Plugin {
       name: "Remove Tag from All open Tabs",
       callback: () => {
         new RemoveTagModal(this.app, (name) => {
-          const leaves = this.app.workspace.getLeavesOfType("markdown");
-          this.removeTagFromTabs(leaves, name);
+          this.removeTagFromTabs(this.getAllOpenMarkdownLeaves(), name);
         }).open();
       }
     });
@@ -304,49 +594,48 @@ var MultiTabPlugin = class extends import_obsidian6.Plugin {
       name: "Rename Tag in All open Tabs",
       callback: () => {
         new RenameTagModal(this.app, (oldName, newName) => {
-          const leaves = this.app.workspace.getLeavesOfType("markdown");
-          this.renameTagInTabs(leaves, oldName, newName);
+          this.renameTagInTabs(this.getAllOpenMarkdownLeaves(), oldName, newName);
         }).open();
       }
     });
-    this.registerDomEvent(document, "mousedown", (evt) => {
-      const target = evt.target;
-      const tabHeader = target.closest(".workspace-tab-header");
-      if (tabHeader) {
-        const leaf = this.getLeafFromHeader(tabHeader);
-        if (leaf) {
-          this.handleTabSelection(leaf, evt.ctrlKey, evt.shiftKey);
+    forEachWindow(this, (win) => {
+      const doc = win == null ? void 0 : win.document;
+      if (!doc) return;
+      const onMouseDown = (evt) => {
+        var _a;
+        const target = evt.target;
+        const tabHeader = (_a = target == null ? void 0 : target.closest) == null ? void 0 : _a.call(target, ".workspace-tab-header");
+        if (tabHeader) {
+          const leaf = this.getLeafFromHeader(tabHeader);
+          if (leaf) {
+            this.handleTabSelection(leaf, evt);
+          }
         }
-      }
-    });
-    this.registerDomEvent(document, "dragstart", (evt) => {
-      var _a;
-      const target = evt.target;
-      const tabHeader = target.closest(".workspace-tab-header");
-      if (tabHeader && this.selectedTabs.size > 0) {
-        const leaf = this.getLeafFromHeader(tabHeader);
-        if (leaf && this.selectedTabs.has(leaf)) {
-          const filePaths = this.getSelectedFilePaths();
-          (_a = evt.dataTransfer) == null ? void 0 : _a.setData("text/plain", JSON.stringify(filePaths));
-          console.log("drag started with files:", filePaths);
+      };
+      const onDragStart = (evt) => {
+        var _a, _b;
+        const target = evt.target;
+        const tabHeader = (_a = target == null ? void 0 : target.closest) == null ? void 0 : _a.call(target, ".workspace-tab-header");
+        if (tabHeader && this.selectedTabs.size > 0) {
+          const leaf = this.getLeafFromHeader(tabHeader);
+          if (leaf && this.selectedTabs.has(leaf)) {
+            const filePaths = this.getSelectedFilePaths();
+            (_b = evt.dataTransfer) == null ? void 0 : _b.setData("text/plain", JSON.stringify(filePaths));
+            console.log("drag started with files:", filePaths);
+          }
         }
-      }
-    });
-    this.registerDomEvent(document, "drop", (evt) => {
-      var _a;
-      const target = evt.target;
-      if (target.tagName === "BODY") {
-        const filePaths = JSON.parse(((_a = evt.dataTransfer) == null ? void 0 : _a.getData("text/plain")) || "[]");
-        if (filePaths.length > 0) {
-          const newWindow = this.app.workspace.openPopoutLeaf();
-          filePaths.forEach((path) => {
-            const file = this.app.vault.getAbstractFileByPath(path);
-            if (file instanceof import_obsidian6.TFile) {
-              newWindow.openFile(file);
-            }
-          });
-        }
-      }
+      };
+      const onDrop = (evt) => {
+        this.handleDrop(evt);
+      };
+      doc.addEventListener("mousedown", onMouseDown);
+      doc.addEventListener("dragstart", onDragStart);
+      doc.addEventListener("drop", onDrop);
+      return () => {
+        doc.removeEventListener("mousedown", onMouseDown);
+        doc.removeEventListener("dragstart", onDragStart);
+        doc.removeEventListener("drop", onDrop);
+      };
     });
   }
   onunload() {
@@ -355,79 +644,146 @@ var MultiTabPlugin = class extends import_obsidian6.Plugin {
   }
   getLeafFromHeader(header) {
     const leafId = header.getAttribute("data-leaf-id");
-    if (leafId) {
-      return this.app.workspace.getLeafById(leafId);
+    if (leafId && typeof this.app.workspace.getLeafById === "function") {
+      const leaf = this.app.workspace.getLeafById(leafId);
+      if (leaf) return leaf;
+    }
+    for (const loc of getEditorLeafLocations(this.app)) {
+      if (loc.leaf) {
+        if (getTabHeaderEl(loc.leaf) === header || leafId && getLeafId(loc.leaf) === leafId) {
+          return loc.leaf;
+        }
+      }
     }
     return null;
   }
-  handleTabSelection(leaf, ctrlKey, shiftKey) {
-    if (shiftKey && this.lastActiveTab) {
-      this.handleShiftClick(leaf);
-    } else if (ctrlKey) {
-      if (this.selectedTabs.has(leaf)) {
-        this.deselectTab(leaf);
-      } else {
-        this.selectTab(leaf);
-        this.lastActiveTab = leaf;
-      }
+  handleTabSelection(leaf, modKeyOrEvent, shiftKey = false) {
+    let isMod = false;
+    let isShift = false;
+    if (typeof modKeyOrEvent === "boolean") {
+      isMod = modKeyOrEvent;
+      isShift = shiftKey;
+    } else if (modKeyOrEvent && typeof modKeyOrEvent === "object") {
+      isMod = import_obsidian6.Keymap.isModifier(modKeyOrEvent, "Mod") || Boolean(modKeyOrEvent.ctrlKey || modKeyOrEvent.metaKey);
+      isShift = Boolean(modKeyOrEvent.shiftKey);
+    }
+    if (isShift && this.lastActiveTab) {
+      this.handleShiftSelect(leaf);
+    } else if (isMod) {
+      this.toggleTabSelection(leaf);
     } else {
       this.clearSelection();
       this.selectTab(leaf);
-      this.lastActiveTab = leaf;
     }
   }
-  handleShiftClick(leaf) {
-    if (!this.lastActiveTab || this.lastActiveTab.parent !== leaf.parent) {
-      this.clearSelection();
+  handleShiftSelect(leaf) {
+    if (!this.lastActiveTab) {
       this.selectTab(leaf);
-      this.lastActiveTab = leaf;
       return;
     }
     const parent = leaf.parent;
-    if (!parent || !("children" in parent)) {
+    const lastParent = this.lastActiveTab.parent;
+    if (!parent || parent !== lastParent) {
+      this.selectTab(leaf);
       return;
     }
-    const children = parent.children;
-    const lastActiveIndex = children.indexOf(this.lastActiveTab);
-    const currentIndex = children.indexOf(leaf);
-    if (lastActiveIndex === -1 || currentIndex === -1) {
+    const children = getGroupChildren(parent);
+    if (!children) {
+      this.selectTab(leaf);
       return;
     }
-    const start = Math.min(lastActiveIndex, currentIndex);
-    const end = Math.max(lastActiveIndex, currentIndex);
-    this.clearSelection();
-    for (let i = start; i <= end; i++) {
-      this.selectTab(children[i]);
+    const startIndex = children.indexOf(this.lastActiveTab);
+    const endIndex = children.indexOf(leaf);
+    if (startIndex === -1 || endIndex === -1) {
+      this.selectTab(leaf);
+      return;
+    }
+    const [min, max] = [Math.min(startIndex, endIndex), Math.max(startIndex, endIndex)];
+    for (let i = min; i <= max; i++) {
+      const childLeaf = children[i];
+      if (childLeaf) {
+        this.selectTab(childLeaf);
+      }
     }
   }
   selectTab(leaf) {
     this.selectedTabs.add(leaf);
-    const tabHeader = leaf.view.containerEl.closest(".workspace-tab-header");
+    this.lastActiveTab = leaf;
+    const tabHeader = getTabHeaderEl(leaf);
     if (tabHeader) {
-      tabHeader.addClass("is-selected");
+      tabHeader.classList.add("is-selected");
       tabHeader.setAttribute("draggable", "true");
     }
     console.log("selected tabs:", this.selectedTabs);
   }
   deselectTab(leaf) {
     this.selectedTabs.delete(leaf);
-    const tabHeader = leaf.view.containerEl.closest(".workspace-tab-header");
+    const tabHeader = getTabHeaderEl(leaf);
     if (tabHeader) {
-      tabHeader.removeClass("is-selected");
+      tabHeader.classList.remove("is-selected");
       tabHeader.removeAttribute("draggable");
+    }
+    if (this.lastActiveTab === leaf) {
+      this.lastActiveTab = null;
     }
     console.log("selected tabs:", this.selectedTabs);
   }
+  toggleTabSelection(leaf) {
+    if (this.selectedTabs.has(leaf)) {
+      this.deselectTab(leaf);
+    } else {
+      this.selectTab(leaf);
+    }
+  }
   clearSelection() {
     this.selectedTabs.forEach((leaf) => {
-      const tabHeader = leaf.view.containerEl.closest(".workspace-tab-header");
+      const tabHeader = getTabHeaderEl(leaf);
       if (tabHeader) {
-        tabHeader.removeClass("is-selected");
+        tabHeader.classList.remove("is-selected");
         tabHeader.removeAttribute("draggable");
       }
     });
     this.selectedTabs.clear();
+    this.lastActiveTab = null;
     console.log("selection cleared");
+  }
+  async handleDrop(evt) {
+    var _a;
+    const rawData = (_a = evt.dataTransfer) == null ? void 0 : _a.getData("text/plain");
+    if (!rawData) return;
+    let filePaths;
+    try {
+      filePaths = JSON.parse(rawData);
+    } catch (e) {
+      return;
+    }
+    if (!Array.isArray(filePaths) || filePaths.length === 0) return;
+    console.log("drop event with files:", filePaths);
+    let isFirst = true;
+    let baseLeaf = null;
+    for (const filePath of filePaths) {
+      if (typeof filePath !== "string") continue;
+      const file = this.app.vault.getAbstractFileByPath(filePath);
+      if (file instanceof import_obsidian6.TFile) {
+        if (isFirst) {
+          baseLeaf = this.app.workspace.getLeaf("tab");
+          if (baseLeaf) {
+            await baseLeaf.openFile(file);
+            isFirst = false;
+          }
+        } else if (baseLeaf && baseLeaf.parent && typeof this.app.workspace.createLeafInParent === "function") {
+          const leaf = this.app.workspace.createLeafInParent(baseLeaf.parent, -1);
+          if (leaf) {
+            await leaf.openFile(file);
+          }
+        } else {
+          const leaf = this.app.workspace.getLeaf("tab");
+          if (leaf) {
+            await leaf.openFile(file);
+          }
+        }
+      }
+    }
   }
   getSelectedFilePaths() {
     const filePaths = [];
@@ -442,6 +798,21 @@ var MultiTabPlugin = class extends import_obsidian6.Plugin {
       }
     });
     return filePaths;
+  }
+  getTabsInCurrentWindow() {
+    const activeLeaf = getActiveLeafInFocusedWindow(this.app);
+    const win = activeLeaf ? getWindowForLeaf(activeLeaf) : void 0;
+    if (win) {
+      const model = buildNavigationModel(this.app, activeLeaf);
+      return getTabsInWindow(model, win).map((entry) => entry.leaf).filter((leaf) => {
+        var _a, _b;
+        return leaf.view instanceof import_obsidian6.MarkdownView || ((_b = (_a = leaf.view) == null ? void 0 : _a.getViewType) == null ? void 0 : _b.call(_a)) === "markdown";
+      });
+    }
+    return this.getAllOpenMarkdownLeaves();
+  }
+  getAllOpenMarkdownLeaves() {
+    return this.app.workspace.getLeavesOfType("markdown");
   }
   async addPropertyToTabs(leaves, name, value) {
     for (const leaf of leaves) {
@@ -476,12 +847,16 @@ var MultiTabPlugin = class extends import_obsidian6.Plugin {
         const file = view.file;
         if (file) {
           await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
-            if (!frontmatter.tags) {
-              frontmatter.tags = [];
+            let tags = frontmatter.tags;
+            if (!tags) {
+              tags = [];
+            } else if (typeof tags === "string") {
+              tags = [tags];
             }
-            if (!frontmatter.tags.includes(tag)) {
-              frontmatter.tags.push(tag);
+            if (!tags.includes(tag)) {
+              tags.push(tag);
             }
+            frontmatter.tags = tags;
           });
         }
       }
@@ -494,8 +869,15 @@ var MultiTabPlugin = class extends import_obsidian6.Plugin {
         const file = view.file;
         if (file) {
           await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
-            if (frontmatter.tags && frontmatter.tags.includes(tag)) {
-              frontmatter.tags.remove(tag);
+            const tags = frontmatter.tags;
+            if (Array.isArray(tags)) {
+              const index = tags.indexOf(tag);
+              if (index > -1) {
+                tags.splice(index, 1);
+                frontmatter.tags = tags;
+              }
+            } else if (typeof tags === "string" && tags === tag) {
+              delete frontmatter.tags;
             }
           });
         }
@@ -509,9 +891,15 @@ var MultiTabPlugin = class extends import_obsidian6.Plugin {
         const file = view.file;
         if (file) {
           await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
-            if (frontmatter.tags && frontmatter.tags.includes(oldTag)) {
-              const index = frontmatter.tags.indexOf(oldTag);
-              frontmatter.tags[index] = newTag;
+            const tags = frontmatter.tags;
+            if (Array.isArray(tags)) {
+              const index = tags.indexOf(oldTag);
+              if (index > -1) {
+                tags[index] = newTag;
+                frontmatter.tags = tags;
+              }
+            } else if (typeof tags === "string" && tags === oldTag) {
+              frontmatter.tags = newTag;
             }
           });
         }

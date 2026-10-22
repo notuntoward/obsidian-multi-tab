@@ -73,6 +73,10 @@ class MockWorkspace {
         return result;
     }
 
+        iterateAllLeaves(callback: (leaf: MockWorkspaceLeaf) => void): void {
+        this.leaves.forEach((leaf) => callback(leaf));
+    }
+
     addLeaf(leaf: MockWorkspaceLeaf) {
         this.leaves.set(leaf.id, leaf);
         this.activeLeaf = leaf;
@@ -83,6 +87,18 @@ class MockWorkspace {
         this.addLeaf(newLeaf);
         return newLeaf;
     }
+
+    onLayoutReady(callback: () => any): void {
+        callback();
+    }
+
+    on(name: string, callback: (...data: any[]) => any): any {
+        return { name, callback };
+    }
+
+    off(name: string, callback: (...data: any[]) => any): void {}
+    offref(ref: any): void {}
+    trigger(name: string, ...data: any[]): void {}
 }
 
 class MockVault {
@@ -93,7 +109,7 @@ class MockVault {
     }
 
     create(path: string, data: string): Promise<any> {
-        const file = { path, name: path.split('/').pop(), frontmatter: {} };
+        const file = new MockTFile(path, path.split('/').pop() || '', {});
         this.files.set(path, file);
         return Promise.resolve(file);
     }
@@ -301,6 +317,14 @@ class MockPlugin {
     registerDomEvent(element: any, event: any, callback: any) {
         // No-op for tests
     }
+
+    registerEvent(eventRef: any) {
+        // No-op for tests
+    }
+
+    register(cleanup: () => any) {
+        // No-op for tests
+    }
 }
 
 
@@ -332,6 +356,22 @@ const Notice = vi.fn().mockImplementation((message: string) => {
 
 const PluginSettingTab = vi.fn();
 
+const Keymap = {
+    isModifier(evt: any, modifier: string): boolean {
+        if (!evt) return false;
+        if (modifier === 'Mod') {
+            return Boolean(evt.ctrlKey || evt.metaKey);
+        }
+        if (modifier === 'Ctrl') return Boolean(evt.ctrlKey);
+        if (modifier === 'Meta') return Boolean(evt.metaKey);
+        if (modifier === 'Shift') return Boolean(evt.shiftKey);
+        if (modifier === 'Alt') return Boolean(evt.altKey);
+        return false;
+    }
+};
+
+
+
 export {
     MockApp,
     MockApp as App,
@@ -355,6 +395,7 @@ export {
     MockEditor as Editor,
     Notice,
     PluginSettingTab,
+    Keymap,
 };
 
 export default {

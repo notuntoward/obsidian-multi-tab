@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import MultiTabPlugin from '../src/main';
 import { MockApp, MockWorkspace, MockWorkspaceLeaf } from './obsidian-mocks';
 import { TFile } from 'obsidian';
@@ -80,6 +80,105 @@ describe('MultiTabPlugin', () => {
             expect(file1.frontmatter.tags).toContain('new-tag');
             expect(file2.frontmatter.tags).not.toContain('old-tag');
             expect(file2.frontmatter.tags).toContain('new-tag');
+        });
+    });
+
+    describe('Tab Selection and Modifiers', () => {
+        let leaf1: MockWorkspaceLeaf;
+        let leaf2: MockWorkspaceLeaf;
+        let leaf3: MockWorkspaceLeaf;
+
+        beforeEach(() => {
+            leaf1 = new MockWorkspaceLeaf('leaf1', { path: 'file1.md' }, app);
+            leaf2 = new MockWorkspaceLeaf('leaf2', { path: 'file2.md' }, app);
+            leaf3 = new MockWorkspaceLeaf('leaf3', { path: 'file3.md' }, app);
+            const parent = { children: [leaf1, leaf2, leaf3] };
+            leaf1.parent = parent;
+            leaf2.parent = parent;
+            leaf3.parent = parent;
+            app.workspace.addLeaf(leaf1);
+            app.workspace.addLeaf(leaf2);
+            app.workspace.addLeaf(leaf3);
+        });
+
+        it('should mark leaf.tabHeaderEl when selecting a tab', () => {
+            plugin.selectTab(leaf1 as any);
+            expect(plugin.selectedTabs.has(leaf1 as any)).toBe(true);
+            expect(leaf1.tabHeaderEl.classList.contains('is-selected')).toBe(true);
+            expect(leaf1.tabHeaderEl.getAttribute('draggable')).toBe('true');
+        });
+
+        it('should unmark leaf.tabHeaderEl when deselecting a tab', () => {
+            plugin.selectTab(leaf1 as any);
+            expect(leaf1.tabHeaderEl.classList.contains('is-selected')).toBe(true);
+            plugin.deselectTab(leaf1 as any);
+            expect(plugin.selectedTabs.has(leaf1 as any)).toBe(false);
+            expect(leaf1.tabHeaderEl.classList.contains('is-selected')).toBe(false);
+            expect(leaf1.tabHeaderEl.getAttribute('draggable')).toBeNull();
+        });
+
+        it('should support Meta key (Mac) in handleTabSelection', () => {
+            plugin.handleTabSelection(leaf1 as any, { metaKey: true, ctrlKey: false, shiftKey: false } as any);
+            expect(plugin.selectedTabs.has(leaf1 as any)).toBe(true);
+            plugin.handleTabSelection(leaf2 as any, { metaKey: true, ctrlKey: false, shiftKey: false } as any);
+            expect(plugin.selectedTabs.has(leaf1 as any)).toBe(true);
+            expect(plugin.selectedTabs.has(leaf2 as any)).toBe(true);
+        });
+
+        it('should handle shift-select across sibling leaves in group', () => {
+            plugin.selectTab(leaf1 as any);
+            plugin.handleTabSelection(leaf3 as any, { metaKey: false, ctrlKey: false, shiftKey: true } as any);
+            expect(plugin.selectedTabs.has(leaf1 as any)).toBe(true);
+            expect(plugin.selectedTabs.has(leaf2 as any)).toBe(true);
+            expect(plugin.selectedTabs.has(leaf3 as any)).toBe(true);
+        });
+    });
+
+    describe('Drop Handling', () => {
+        it('should silently ignore drop with null or missing dataTransfer', async () => {
+            await expect(plugin.handleDrop({ dataTransfer: null } as any)).resolves.not.toThrow();
+        });
+
+        it('should silently ignore drop with invalid JSON', async () => {
+            const evt = {
+                dataTransfer: {
+                    getData: () => 'invalid JSON {{{',
+                },
+            };
+            await expect(plugin.handleDrop(evt as any)).resolves.not.toThrow();
+        });
+
+        it('should safely open files when drop data is valid JSON array', async () => {
+            const openedFiles: string[] = [];
+            const mockLeaf = {
+                openFile: vi.fn().mockImplementation((f: any) => {
+                    openedFiles.push(f.path);
+                    return Promise.resolve();
+                }),
+                parent: { children: [] },
+            };
+            (app.workspace as any).getLeaf = vi.fn().mockReturnValue(mockLeaf);
+            (app.workspace as any).createLeafInParent = vi.fn().mockReturnValue(mockLeaf);
+            await app.vault.create('note-a.md', '');
+            await app.vault.create('note-b.md', '');
+
+            const evt = {
+                dataTransfer: {
+                    getData: () => JSON.stringify(['note-a.md', 'note-b.md']),
+                },
+            };
+            await plugin.handleDrop(evt as any);
+            expect(openedFiles).toEqual(['note-a.md', 'note-b.md']);
+        });
+    });
+
+    describe('Window Tabs and Workspace Leaves', () => {
+        it('getTabsInCurrentWindow falls back to all open markdown leaves when no window is active', () => {
+            const leaf = new MockWorkspaceLeaf('leaf1', { path: 'file1.md' }, app);
+            app.workspace.addLeaf(leaf);
+            const tabs = plugin.getTabsInCurrentWindow();
+            expect(tabs.length).toBe(1);
+            expect(tabs[0]).toBe(leaf);
         });
     });
 });

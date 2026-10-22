@@ -20,7 +20,18 @@
     "types": [
       "node",
       "vitest/globals"
-    ]
+    ],
+    "paths": {
+      "obsidian": [
+        "./node_modules/obsidian"
+      ],
+      "commons/*": [
+        "../obsidian-commons/src/*/index.ts"
+      ],
+      "commons/internals": [
+        "../obsidian-commons/src/internals.ts"
+      ]
+    }
   },
   "include": [
     "**/*.ts"
