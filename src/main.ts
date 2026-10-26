@@ -4,6 +4,7 @@ import {
     TFile,
     MarkdownView,
     Keymap,
+    type FrontMatterCache,
 } from 'obsidian';
 import {
     forEachWindow,
@@ -426,100 +427,72 @@ export default class MultiTabPlugin extends Plugin {
         return this.app.workspace.getLeavesOfType('markdown');
     }
 
-    async addPropertyToTabs(leaves: Iterable<WorkspaceLeaf>, name: string, value: string) {
+    private async updateFrontmatterForTabs(
+        leaves: Iterable<WorkspaceLeaf>,
+        update: (frontmatter: FrontMatterCache) => void,
+    ): Promise<void> {
         for (const leaf of leaves) {
             const view = leaf.view;
-            if (view instanceof MarkdownView) {
-                const file = view.file;
-                if (file) {
-                    await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
-                        frontmatter[name] = value;
-                    });
-                }
-            }
+            const file = view instanceof MarkdownView ? view.file : null;
+            if (!file) continue;
+            await this.app.fileManager.processFrontMatter(file, update);
         }
+    }
+
+    async addPropertyToTabs(leaves: Iterable<WorkspaceLeaf>, name: string, value: string) {
+        await this.updateFrontmatterForTabs(leaves, (frontmatter) => {
+            frontmatter[name] = value;
+        });
     }
 
     async removePropertyFromTabs(leaves: Iterable<WorkspaceLeaf>, name: string) {
-        for (const leaf of leaves) {
-            const view = leaf.view;
-            if (view instanceof MarkdownView) {
-                const file = view.file;
-                if (file) {
-                    await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
-                        delete frontmatter[name];
-                    });
-                }
-            }
-        }
+        await this.updateFrontmatterForTabs(leaves, (frontmatter) => {
+            delete frontmatter[name];
+        });
     }
 
     async addTagToTabs(leaves: Iterable<WorkspaceLeaf>, tag: string) {
-        for (const leaf of leaves) {
-            const view = leaf.view;
-            if (view instanceof MarkdownView) {
-                const file = view.file;
-                if (file) {
-                    await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
-                        let tags = frontmatter.tags;
-                        if (!tags) {
-                            tags = [];
-                        } else if (typeof tags === 'string') {
-                            tags = [tags];
-                        }
-                        if (!tags.includes(tag)) {
-                            tags.push(tag);
-                        }
-                        frontmatter.tags = tags;
-                    });
-                }
+        await this.updateFrontmatterForTabs(leaves, (frontmatter) => {
+            let tags = frontmatter.tags;
+            if (!tags) {
+                tags = [];
+            } else if (typeof tags === 'string') {
+                tags = [tags];
             }
-        }
+            if (!tags.includes(tag)) {
+                tags.push(tag);
+            }
+            frontmatter.tags = tags;
+        });
     }
 
     async removeTagFromTabs(leaves: Iterable<WorkspaceLeaf>, tag: string) {
-        for (const leaf of leaves) {
-            const view = leaf.view;
-            if (view instanceof MarkdownView) {
-                const file = view.file;
-                if (file) {
-                    await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
-                        const tags = frontmatter.tags;
-                        if (Array.isArray(tags)) {
-                            const index = tags.indexOf(tag);
-                            if (index > -1) {
-                                tags.splice(index, 1);
-                                frontmatter.tags = tags;
-                            }
-                        } else if (typeof tags === 'string' && tags === tag) {
-                            delete frontmatter.tags;
-                        }
-                    });
+        await this.updateFrontmatterForTabs(leaves, (frontmatter) => {
+            const tags = frontmatter.tags;
+            if (Array.isArray(tags)) {
+                const index = tags.indexOf(tag);
+                if (index > -1) {
+                    tags.splice(index, 1);
+                    frontmatter.tags = tags;
                 }
+            } else if (typeof tags === 'string' && tags === tag) {
+                delete frontmatter.tags;
             }
-        }
+        });
     }
 
     async renameTagInTabs(leaves: Iterable<WorkspaceLeaf>, oldTag: string, newTag: string) {
-        for (const leaf of leaves) {
-            const view = leaf.view;
-            if (view instanceof MarkdownView) {
-                const file = view.file;
-                if (file) {
-                    await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
-                        const tags = frontmatter.tags;
-                        if (Array.isArray(tags)) {
-                            const index = tags.indexOf(oldTag);
-                            if (index > -1) {
-                                tags[index] = newTag;
-                                frontmatter.tags = tags;
-                            }
-                        } else if (typeof tags === 'string' && tags === oldTag) {
-                            frontmatter.tags = newTag;
-                        }
-                    });
+        await this.updateFrontmatterForTabs(leaves, (frontmatter) => {
+            const tags = frontmatter.tags;
+            if (Array.isArray(tags)) {
+                const index = tags.indexOf(oldTag);
+                if (index > -1) {
+                    tags[index] = newTag;
+                    frontmatter.tags = tags;
                 }
+            } else if (typeof tags === 'string' && tags === oldTag) {
+                frontmatter.tags = newTag;
             }
-        }
+        });
     }
 }
