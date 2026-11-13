@@ -88,12 +88,13 @@ function getMainWindow(app) {
   }
   return typeof window === "undefined" ? void 0 : liveWindow(window);
 }
-function isSidebarLeaf(app, leaf) {
+function isSidebarLeaf(app, leaf, side) {
   var _a, _b;
   try {
     const root = (_b = (_a = leafOf(leaf)) == null ? void 0 : _a.getRoot) == null ? void 0 : _b.call(_a);
     if (root === void 0 || root === null) return false;
     const ws = workspaceOf(app);
+    if (side) return root === ws[side === "left" ? "leftSplit" : "rightSplit"];
     return root === ws.leftSplit || root === ws.rightSplit;
   } catch (e) {
     return false;
@@ -317,10 +318,25 @@ function forEachWindow(plugin, setup) {
 }
 
 // ../obsidian-commons/src/workspace/actions.ts
-function getActiveLeafInFocusedWindow(app) {
+function getActiveLeafInFocusedWindow(app, options = {}) {
   const globalActive = app.workspace.activeLeaf;
-  const usable = (leaf) => !!leaf && !isLeafDetached(leaf) && !isSidebarLeaf(app, leaf);
+  const usable = (leaf) => !!leaf && !isLeafDetached(leaf) && (options.includeSidebars === true || !isSidebarLeaf(app, leaf));
   const focused = getActiveWindow();
+  if (options.includeSidebars) {
+    let domFocused = null;
+    app.workspace.iterateAllLeaves((leaf) => {
+      var _a, _b;
+      if (domFocused || isLeafDetached(leaf)) return;
+      const win = getWindowForLeaf(leaf);
+      if (focused && win !== focused) return;
+      const el = (_a = leaf.view) == null ? void 0 : _a.containerEl;
+      const active = (_b = el == null ? void 0 : el.ownerDocument) == null ? void 0 : _b.activeElement;
+      if (active && active !== el.ownerDocument.body && typeof el.contains === "function" && el.contains(active)) {
+        domFocused = leaf;
+      }
+    });
+    if (domFocused) return domFocused;
+  }
   if (!focused) return usable(globalActive) ? globalActive : null;
   if (usable(globalActive) && getWindowForLeaf(globalActive) === focused) return globalActive;
   const inFocused = getEditorLeafLocations(app).find((loc) => loc.window === focused);
