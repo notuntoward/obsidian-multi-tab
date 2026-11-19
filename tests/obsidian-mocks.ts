@@ -73,7 +73,11 @@ class MockWorkspace {
         return result;
     }
 
-        iterateAllLeaves(callback: (leaf: MockWorkspaceLeaf) => void): void {
+    getMostRecentLeaf(): MockWorkspaceLeaf | null {
+        return this.activeLeaf;
+    }
+
+    iterateAllLeaves(callback: (leaf: MockWorkspaceLeaf) => void): void {
         this.leaves.forEach((leaf) => callback(leaf));
     }
 

@@ -3,7 +3,7 @@
 	"name": "Multi-Tab",
 	"version": "0.1.0",
 	"minAppVersion": "1.14.0",
-	"description": "Select and manage multiple tabs in Obsidian.",
+	"description": "Select and manage multiple tabs.",
 	"author": "Your Name",
 	"authorUrl": "",
 	"isDesktopOnly": false

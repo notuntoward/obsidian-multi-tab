@@ -30,14 +30,12 @@ export default class MultiTabPlugin extends Plugin {
     lastActiveTab: WorkspaceLeaf | null = null;
 
     async onload() {
-        console.log('loading multi-tab plugin');
-
         this.addCommand({
             id: 'add-property-to-selected-tabs',
             name: 'Add Property to Selected Tabs',
             callback: () => {
                 new AddPropModal(this.app, (name, value) => {
-                    this.addPropertyToTabs(this.selectedTabs, name, value);
+                    void this.addPropertyToTabs(this.selectedTabs, name, value);
                 }).open();
             }
         });
@@ -47,7 +45,7 @@ export default class MultiTabPlugin extends Plugin {
             name: 'Remove Property from Selected Tabs',
             callback: () => {
                 new RemovePropModal(this.app, (name) => {
-                    this.removePropertyFromTabs(this.selectedTabs, name);
+                    void this.removePropertyFromTabs(this.selectedTabs, name);
                 }).open();
             }
         });
@@ -57,7 +55,7 @@ export default class MultiTabPlugin extends Plugin {
             name: 'Add Tag to Selected Tabs',
             callback: () => {
                 new AddTagModal(this.app, (name) => {
-                    this.addTagToTabs(this.selectedTabs, name);
+                    void this.addTagToTabs(this.selectedTabs, name);
                 }).open();
             }
         });
@@ -67,7 +65,7 @@ export default class MultiTabPlugin extends Plugin {
             name: 'Remove Tag from Selected Tabs',
             callback: () => {
                 new RemoveTagModal(this.app, (name) => {
-                    this.removeTagFromTabs(this.selectedTabs, name);
+                    void this.removeTagFromTabs(this.selectedTabs, name);
                 }).open();
             }
         });
@@ -77,7 +75,7 @@ export default class MultiTabPlugin extends Plugin {
             name: 'Rename Tag in Selected Tabs',
             callback: () => {
                 new RenameTagModal(this.app, (oldName, newName) => {
-                    this.renameTagInTabs(this.selectedTabs, oldName, newName);
+                    void this.renameTagInTabs(this.selectedTabs, oldName, newName);
                 }).open();
             }
         });
@@ -88,7 +86,7 @@ export default class MultiTabPlugin extends Plugin {
             name: 'Add Property to All Tabs in Window',
             callback: () => {
                 new AddPropModal(this.app, (name, value) => {
-                    this.addPropertyToTabs(this.getTabsInCurrentWindow(), name, value);
+                    void this.addPropertyToTabs(this.getTabsInCurrentWindow(), name, value);
                 }).open();
             }
         });
@@ -98,7 +96,7 @@ export default class MultiTabPlugin extends Plugin {
             name: 'Remove Property from All Tabs in Window',
             callback: () => {
                 new RemovePropModal(this.app, (name) => {
-                    this.removePropertyFromTabs(this.getTabsInCurrentWindow(), name);
+                    void this.removePropertyFromTabs(this.getTabsInCurrentWindow(), name);
                 }).open();
             }
         });
@@ -108,7 +106,7 @@ export default class MultiTabPlugin extends Plugin {
             name: 'Add Tag to All Tabs in Window',
             callback: () => {
                 new AddTagModal(this.app, (name) => {
-                    this.addTagToTabs(this.getTabsInCurrentWindow(), name);
+                    void this.addTagToTabs(this.getTabsInCurrentWindow(), name);
                 }).open();
             }
         });
@@ -118,7 +116,7 @@ export default class MultiTabPlugin extends Plugin {
             name: 'Remove Tag from All Tabs in Window',
             callback: () => {
                 new RemoveTagModal(this.app, (name) => {
-                    this.removeTagFromTabs(this.getTabsInCurrentWindow(), name);
+                    void this.removeTagFromTabs(this.getTabsInCurrentWindow(), name);
                 }).open();
             }
         });
@@ -128,7 +126,7 @@ export default class MultiTabPlugin extends Plugin {
             name: 'Rename Tag in All Tabs in Window',
             callback: () => {
                 new RenameTagModal(this.app, (oldName, newName) => {
-                    this.renameTagInTabs(this.getTabsInCurrentWindow(), oldName, newName);
+                    void this.renameTagInTabs(this.getTabsInCurrentWindow(), oldName, newName);
                 }).open();
             }
         });
@@ -139,7 +137,7 @@ export default class MultiTabPlugin extends Plugin {
             name: 'Add Property to All open Tabs',
             callback: () => {
                 new AddPropModal(this.app, (name, value) => {
-                    this.addPropertyToTabs(this.getAllOpenMarkdownLeaves(), name, value);
+                    void this.addPropertyToTabs(this.getAllOpenMarkdownLeaves(), name, value);
                 }).open();
             }
         });
@@ -149,7 +147,7 @@ export default class MultiTabPlugin extends Plugin {
             name: 'Remove Property from All open Tabs',
             callback: () => {
                 new RemovePropModal(this.app, (name) => {
-                    this.removePropertyFromTabs(this.getAllOpenMarkdownLeaves(), name);
+                    void this.removePropertyFromTabs(this.getAllOpenMarkdownLeaves(), name);
                 }).open();
             }
         });
@@ -159,7 +157,7 @@ export default class MultiTabPlugin extends Plugin {
             name: 'Add Tag to All open Tabs',
             callback: () => {
                 new AddTagModal(this.app, (name) => {
-                    this.addTagToTabs(this.getAllOpenMarkdownLeaves(), name);
+                    void this.addTagToTabs(this.getAllOpenMarkdownLeaves(), name);
                 }).open();
             }
         });
@@ -169,7 +167,7 @@ export default class MultiTabPlugin extends Plugin {
             name: 'Remove Tag from All open Tabs',
             callback: () => {
                 new RemoveTagModal(this.app, (name) => {
-                    this.removeTagFromTabs(this.getAllOpenMarkdownLeaves(), name);
+                    void this.removeTagFromTabs(this.getAllOpenMarkdownLeaves(), name);
                 }).open();
             }
         });
@@ -179,7 +177,7 @@ export default class MultiTabPlugin extends Plugin {
             name: 'Rename Tag in All open Tabs',
             callback: () => {
                 new RenameTagModal(this.app, (oldName, newName) => {
-                    this.renameTagInTabs(this.getAllOpenMarkdownLeaves(), oldName, newName);
+                    void this.renameTagInTabs(this.getAllOpenMarkdownLeaves(), oldName, newName);
                 }).open();
             }
         });
@@ -207,13 +205,12 @@ export default class MultiTabPlugin extends Plugin {
                     if (leaf && this.selectedTabs.has(leaf)) {
                         const filePaths = this.getSelectedFilePaths();
                         evt.dataTransfer?.setData('text/plain', JSON.stringify(filePaths));
-                        console.log('drag started with files:', filePaths);
                     }
                 }
             };
 
             const onDrop = (evt: DragEvent) => {
-                this.handleDrop(evt);
+                void this.handleDrop(evt);
             };
 
             doc.addEventListener('mousedown', onMouseDown);
@@ -229,14 +226,13 @@ export default class MultiTabPlugin extends Plugin {
     }
 
     onunload() {
-        console.log('unloading multi-tab plugin');
         this.clearSelection();
     }
 
     getLeafFromHeader(header: Element): WorkspaceLeaf | null {
         const leafId = header.getAttribute('data-leaf-id');
-        if (leafId && typeof (this.app.workspace as any).getLeafById === 'function') {
-            const leaf = (this.app.workspace as any).getLeafById(leafId);
+        if (leafId) {
+            const leaf = this.app.workspace.getLeafById(leafId);
             if (leaf) return leaf;
         }
         for (const loc of getEditorLeafLocations(this.app)) {
@@ -279,8 +275,9 @@ export default class MultiTabPlugin extends Plugin {
             return;
         }
 
-        const parent = (leaf as any).parent;
-        const lastParent = (this.lastActiveTab as any).parent;
+        const locations = getEditorLeafLocations(this.app);
+        const parent = locations.find((location) => location.leaf === leaf)?.group;
+        const lastParent = locations.find((location) => location.leaf === this.lastActiveTab)?.group;
         if (!parent || parent !== lastParent) {
             this.selectTab(leaf);
             return;
@@ -317,7 +314,6 @@ export default class MultiTabPlugin extends Plugin {
             tabHeader.classList.add('is-selected');
             tabHeader.setAttribute('draggable', 'true');
         }
-        console.log('selected tabs:', this.selectedTabs);
     }
 
     deselectTab(leaf: WorkspaceLeaf) {
@@ -330,7 +326,6 @@ export default class MultiTabPlugin extends Plugin {
         if (this.lastActiveTab === leaf) {
             this.lastActiveTab = null;
         }
-        console.log('selected tabs:', this.selectedTabs);
     }
 
     toggleTabSelection(leaf: WorkspaceLeaf) {
@@ -351,7 +346,6 @@ export default class MultiTabPlugin extends Plugin {
         });
         this.selectedTabs.clear();
         this.lastActiveTab = null;
-        console.log('selection cleared');
     }
 
     async handleDrop(evt: DragEvent) {
@@ -367,10 +361,8 @@ export default class MultiTabPlugin extends Plugin {
 
         if (!Array.isArray(filePaths) || filePaths.length === 0) return;
 
-        console.log('drop event with files:', filePaths);
-
         let isFirst = true;
-        let baseLeaf: any = null;
+        let baseLeaf: WorkspaceLeaf | null = null;
 
         for (const filePath of filePaths) {
             if (typeof filePath !== 'string') continue;
@@ -378,20 +370,17 @@ export default class MultiTabPlugin extends Plugin {
             if (file instanceof TFile) {
                 if (isFirst) {
                     baseLeaf = this.app.workspace.getLeaf('tab');
-                    if (baseLeaf) {
-                        await baseLeaf.openFile(file);
-                        isFirst = false;
-                    }
-                } else if (baseLeaf && baseLeaf.parent && typeof (this.app.workspace as any).createLeafInParent === 'function') {
-                    const leaf = (this.app.workspace as any).createLeafInParent(baseLeaf.parent, -1);
-                    if (leaf) {
-                        await leaf.openFile(file);
-                    }
+                    await baseLeaf.openFile(file);
+                    isFirst = false;
+                } else if (baseLeaf?.parent) {
+                    const leaf = this.app.workspace.createLeafInParent(
+                        baseLeaf.parent,
+                        -1,
+                    );
+                    await leaf.openFile(file);
                 } else {
                     const leaf = this.app.workspace.getLeaf('tab');
-                    if (leaf) {
-                        await leaf.openFile(file);
-                    }
+                    await leaf.openFile(file);
                 }
             }
         }
@@ -453,11 +442,14 @@ export default class MultiTabPlugin extends Plugin {
 
     async addTagToTabs(leaves: Iterable<WorkspaceLeaf>, tag: string) {
         await this.updateFrontmatterForTabs(leaves, (frontmatter) => {
-            let tags = frontmatter.tags;
-            if (!tags) {
+            const storedTags: unknown = frontmatter.tags;
+            let tags: unknown[];
+            if (Array.isArray(storedTags)) {
+                tags = storedTags as unknown[];
+            } else if (typeof storedTags === 'string') {
+                tags = [storedTags];
+            } else {
                 tags = [];
-            } else if (typeof tags === 'string') {
-                tags = [tags];
             }
             if (!tags.includes(tag)) {
                 tags.push(tag);
@@ -468,7 +460,7 @@ export default class MultiTabPlugin extends Plugin {
 
     async removeTagFromTabs(leaves: Iterable<WorkspaceLeaf>, tag: string) {
         await this.updateFrontmatterForTabs(leaves, (frontmatter) => {
-            const tags = frontmatter.tags;
+            const tags: unknown = frontmatter.tags;
             if (Array.isArray(tags)) {
                 const index = tags.indexOf(tag);
                 if (index > -1) {
@@ -483,7 +475,7 @@ export default class MultiTabPlugin extends Plugin {
 
     async renameTagInTabs(leaves: Iterable<WorkspaceLeaf>, oldTag: string, newTag: string) {
         await this.updateFrontmatterForTabs(leaves, (frontmatter) => {
-            const tags = frontmatter.tags;
+            const tags: unknown = frontmatter.tags;
             if (Array.isArray(tags)) {
                 const index = tags.indexOf(oldTag);
                 if (index > -1) {

@@ -132,6 +132,13 @@ describe('MultiTabPlugin', () => {
             expect(plugin.selectedTabs.has(leaf2 as any)).toBe(true);
             expect(plugin.selectedTabs.has(leaf3 as any)).toBe(true);
         });
+
+        it('should resolve a tab header by its public leaf id', () => {
+            const header = document.createElement('div');
+            header.setAttribute('data-leaf-id', 'leaf2');
+
+            expect(plugin.getLeafFromHeader(header)).toBe(leaf2);
+        });
     });
 
     describe('Drop Handling', () => {
@@ -157,8 +164,10 @@ describe('MultiTabPlugin', () => {
                 }),
                 parent: { children: [] },
             };
-            (app.workspace as any).getLeaf = vi.fn().mockReturnValue(mockLeaf);
-            (app.workspace as any).createLeafInParent = vi.fn().mockReturnValue(mockLeaf);
+            const getLeaf = vi.fn().mockReturnValue(mockLeaf);
+            const createLeafInParent = vi.fn().mockReturnValue(mockLeaf);
+            (app.workspace as any).getLeaf = getLeaf;
+            (app.workspace as any).createLeafInParent = createLeafInParent;
             await app.vault.create('note-a.md', '');
             await app.vault.create('note-b.md', '');
 
@@ -169,6 +178,8 @@ describe('MultiTabPlugin', () => {
             };
             await plugin.handleDrop(evt as any);
             expect(openedFiles).toEqual(['note-a.md', 'note-b.md']);
+            expect(getLeaf).toHaveBeenCalledTimes(1);
+            expect(createLeafInParent).toHaveBeenCalledWith(mockLeaf.parent, -1);
         });
     });
 
