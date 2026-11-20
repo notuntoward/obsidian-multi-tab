@@ -1,4 +1,5 @@
 import { vi } from 'vitest';
+export { SuggestModal } from 'commons/testing';
 // tests/obsidian-mocks.ts
 
 // This file mocks the 'obsidian' module.
@@ -214,13 +215,21 @@ class MockMarkdownView {
 
 class MockModal {
     app: MockApp;
+    modalEl: HTMLElement;
+    titleEl: HTMLElement;
     contentEl: HTMLElement;
     onSubmit: (...args: any[]) => void;
 
     constructor(app: MockApp, onSubmit: (...args: any[]) => void) {
         this.app = app;
         this.onSubmit = onSubmit;
+        this.modalEl = document.createElement('div');
+        this.titleEl = document.createElement('div');
+        (this.titleEl as any).setText = (text: string) => {
+            this.titleEl.textContent = text;
+        };
         this.contentEl = document.createElement('div');
+        this.modalEl.append(this.titleEl, this.contentEl);
         // Add the setText method to the contentEl
         (this.contentEl as any).setText = (text: string) => {
             this.contentEl.textContent = text;

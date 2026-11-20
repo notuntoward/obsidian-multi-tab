@@ -13,7 +13,8 @@ describe('RemoveTagModal', () => {
         const modal = new RemoveTagModal(app as any, () => {});
         modal.onOpen();
 
-        expect(modal.contentEl.textContent).toContain('Remove Tag from Selected Tabs');
+        expect(modal.titleEl.textContent).toBe('Remove Tag from Selected Tabs');
+        expect(modal.modalEl.classList.contains('commons-modal-compact')).toBe(true);
         const textInput = modal.contentEl.querySelector('input[type="text"]');
         const removeButton = modal.contentEl.querySelector('button');
 

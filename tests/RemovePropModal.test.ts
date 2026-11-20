@@ -13,7 +13,8 @@ describe('RemovePropModal', () => {
         const modal = new RemovePropModal(app as any, () => {});
         modal.onOpen();
 
-        expect(modal.contentEl.textContent).toContain('Remove Property from Selected Tabs');
+        expect(modal.titleEl.textContent).toBe('Remove Property from Selected Tabs');
+        expect(modal.modalEl.classList.contains('commons-modal-compact')).toBe(true);
         const textInput = modal.contentEl.querySelector('input[type="text"]');
         const removeButton = modal.contentEl.querySelector('button');
 

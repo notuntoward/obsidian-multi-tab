@@ -1,4 +1,5 @@
 import { App, Modal, Setting } from 'obsidian';
+import { applyModalAppearance } from 'commons/modal';
 
 export class RemovePropModal extends Modal {
     propertyName: string;
@@ -11,7 +12,8 @@ export class RemovePropModal extends Modal {
 
     onOpen() {
         const { contentEl } = this;
-        contentEl.setText('Remove Property from Selected Tabs');
+        this.titleEl.setText('Remove Property from Selected Tabs');
+        applyModalAppearance(this, { size: 'compact' });
 
         new Setting(contentEl)
             .setName('Property Name')

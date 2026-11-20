@@ -1,4 +1,5 @@
 import { App, Modal, Setting } from 'obsidian';
+import { applyModalAppearance } from 'commons/modal';
 
 export class RemoveTagModal extends Modal {
     tagName: string;
@@ -11,7 +12,8 @@ export class RemoveTagModal extends Modal {
 
     onOpen() {
         const { contentEl } = this;
-        contentEl.setText('Remove Tag from Selected Tabs');
+        this.titleEl.setText('Remove Tag from Selected Tabs');
+        applyModalAppearance(this, { size: 'compact' });
 
         new Setting(contentEl)
             .setName('Tag Name')

@@ -13,7 +13,8 @@ describe('RenameTagModal', () => {
         const modal = new RenameTagModal(app as any, () => {});
         modal.onOpen();
 
-        expect(modal.contentEl.textContent).toContain('Rename Tag in Selected Tabs');
+        expect(modal.titleEl.textContent).toBe('Rename Tag in Selected Tabs');
+        expect(modal.modalEl.classList.contains('commons-modal-compact')).toBe(true);
         const textInputs = modal.contentEl.querySelectorAll('input[type="text"]');
         const renameButton = modal.contentEl.querySelector('button');
 

@@ -1,4 +1,5 @@
 import { App, Modal, Setting } from 'obsidian';
+import { applyModalAppearance } from 'commons/modal';
 
 export class AddTagModal extends Modal {
     tagName: string;
@@ -11,7 +12,8 @@ export class AddTagModal extends Modal {
 
     onOpen() {
         const { contentEl } = this;
-        contentEl.setText('Add Tag to Selected Tabs');
+        this.titleEl.setText('Add Tag to Selected Tabs');
+        applyModalAppearance(this, { size: 'compact' });
 
         new Setting(contentEl)
             .setName('Tag Name')

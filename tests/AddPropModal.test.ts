@@ -13,7 +13,8 @@ describe('AddPropModal', () => {
         const modal = new AddPropModal(app as any, () => {});
         modal.onOpen();
 
-        expect(modal.contentEl.textContent).toContain('Add Property to Selected Tabs');
+        expect(modal.titleEl.textContent).toBe('Add Property to Selected Tabs');
+        expect(modal.modalEl.classList.contains('commons-modal-compact')).toBe(true);
         const textInputs = modal.contentEl.querySelectorAll('input[type="text"]');
         const addButton = modal.contentEl.querySelector('button');
 

@@ -27,9 +27,10 @@ __export(main_exports, {
   default: () => MultiTabPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian6 = require("obsidian");
+var import_obsidian11 = require("obsidian");
 
 // ../obsidian-commons/src/internals.ts
+var scriptWindow = typeof activeWindow === "undefined" ? void 0 : activeWindow;
 var leafOf = (leaf) => leaf != null ? leaf : void 0;
 var workspaceOf = (app) => app.workspace;
 function getLeafId(leaf) {
@@ -86,7 +87,7 @@ function getMainWindow(app) {
     if (fromElement) return fromElement;
   } catch (e) {
   }
-  return typeof window === "undefined" ? void 0 : liveWindow(window);
+  return liveWindow(scriptWindow);
 }
 function isSidebarLeaf(app, leaf, side) {
   var _a, _b;
@@ -318,8 +319,11 @@ function forEachWindow(plugin, setup) {
 }
 
 // ../obsidian-commons/src/workspace/actions.ts
+function getActiveWorkspaceLeaf(workspace) {
+  return workspace.activeLeaf;
+}
 function getActiveLeafInFocusedWindow(app, options = {}) {
-  const globalActive = app.workspace.getMostRecentLeaf();
+  const globalActive = getActiveWorkspaceLeaf(app.workspace);
   const usable = (leaf) => !!leaf && !isLeafDetached(leaf) && (options.includeSidebars === true || !isSidebarLeaf(app, leaf));
   const focused = getActiveWindow();
   if (options.includeSidebars) {
@@ -345,22 +349,146 @@ function getActiveLeafInFocusedWindow(app, options = {}) {
 }
 
 // src/AddPropModal.ts
+var import_obsidian6 = require("obsidian");
+
+// ../obsidian-commons/src/modal/modal.ts
 var import_obsidian = require("obsidian");
-var AddPropModal = class extends import_obsidian.Modal {
+
+// ../obsidian-commons/src/modal/suggest.ts
+var import_obsidian5 = require("obsidian");
+
+// ../obsidian-commons/src/search/search.ts
+var import_obsidian2 = require("obsidian");
+
+// ../obsidian-commons/src/color/page-color.ts
+var import_obsidian4 = require("obsidian");
+
+// ../obsidian-commons/src/properties/catalog.ts
+var import_obsidian3 = require("obsidian");
+
+// ../obsidian-commons/src/modal/paging.ts
+var PAGING_CONTROL = [
+  "textarea",
+  "select",
+  '[contenteditable]:not([contenteditable="false"])',
+  'input[type="number"]',
+  'input[type="range"]',
+  'input[type="date"]',
+  'input[type="datetime-local"]',
+  'input[type="time"]',
+  'input[type="month"]',
+  'input[type="week"]',
+  '[role="listbox"]',
+  '[role="tree"]',
+  '[role="grid"]',
+  '[role="slider"]',
+  '[role="spinbutton"]'
+].join(", ");
+
+// ../obsidian-commons/src/modal/appearance.ts
+function applyModalAppearance(modal, options = {}) {
+  const { modalEl } = modal;
+  const doc = modalEl.ownerDocument;
+  if (!doc.querySelector("style[data-commons-modal]")) {
+    const style = doc.createElement("style");
+    style.setAttribute("data-commons-modal", "");
+    style.textContent = `
+.modal.commons-modal .modal-title {
+    color: var(--text-normal);
+    text-align: start;
+}
+.modal.commons-modal-compact { width: min(440px, calc(100vw - 32px)); }
+.modal.commons-modal-standard { width: min(640px, calc(100vw - 32px)); }
+.commons-modal .commons-modal-intro {
+    margin: var(--size-4-3) 0;
+    color: var(--text-normal);
+    font-size: var(--font-ui-medium);
+    line-height: 1.5;
+    text-align: start;
+    overflow-wrap: anywhere;
+}
+.commons-modal .commons-modal-intro > p { margin: 0; }
+.commons-modal .commons-modal-intro > p + p { margin-top: var(--size-4-2); }
+.commons-modal .commons-modal-field {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    align-items: baseline;
+    gap: var(--size-4-4);
+    margin-block: var(--size-4-4);
+    text-align: start;
+    font-size: var(--font-ui-medium);
+    font-weight: var(--font-normal);
+}
+.commons-modal .commons-modal-control {
+    display: grid;
+    gap: var(--size-4-2);
+    min-width: 0;
+}
+.commons-modal .commons-modal-description {
+    color: var(--text-muted);
+    font-size: var(--font-ui-small);
+    line-height: 1.5;
+}
+@media (max-width: 480px) {
+    .commons-modal .commons-modal-field {
+        grid-template-columns: minmax(0, 1fr);
+        gap: var(--size-4-2);
+    }
+}
+.commons-modal input.commons-modal-input {
+    width: 100%;
+    min-width: 0;
+    font-family: var(--font-monospace);
+    font-size: var(--font-ui-medium);
+}
+.commons-modal .commons-modal-error {
+    color: var(--text-error);
+    font-size: var(--font-ui-small);
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+.commons-modal .commons-modal-error:not(:empty) { margin-block: var(--size-4-2); }
+.commons-modal .commons-modal-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--size-4-2);
+    margin-top: var(--size-4-4);
+}
+.commons-modal .commons-modal-actions > button {
+    height: auto;
+    min-height: var(--input-height);
+    white-space: normal;
+    overflow-wrap: anywhere;
+    max-width: 100%;
+}
+`;
+    doc.head.appendChild(style);
+  }
+  modalEl.classList.add("commons-modal");
+  if (options.size) {
+    modalEl.classList.remove("commons-modal-compact", "commons-modal-standard");
+    modalEl.classList.add(`commons-modal-${options.size}`);
+  }
+}
+
+// src/AddPropModal.ts
+var AddPropModal = class extends import_obsidian6.Modal {
   constructor(app, onSubmit) {
     super(app);
     this.onSubmit = onSubmit;
   }
   onOpen() {
     const { contentEl } = this;
-    contentEl.setText("Add Property to Selected Tabs");
-    new import_obsidian.Setting(contentEl).setName("Property Name").addText((text) => text.onChange((value) => {
+    this.titleEl.setText("Add Property to Selected Tabs");
+    applyModalAppearance(this, { size: "compact" });
+    new import_obsidian6.Setting(contentEl).setName("Property Name").addText((text) => text.onChange((value) => {
       this.propertyName = value;
     }));
-    new import_obsidian.Setting(contentEl).setName("Property Value").addText((text) => text.onChange((value) => {
+    new import_obsidian6.Setting(contentEl).setName("Property Value").addText((text) => text.onChange((value) => {
       this.propertyValue = value;
     }));
-    new import_obsidian.Setting(contentEl).addButton((btn) => btn.setButtonText("Add").setCta().onClick(() => {
+    new import_obsidian6.Setting(contentEl).addButton((btn) => btn.setButtonText("Add").setCta().onClick(() => {
       this.close();
       this.onSubmit(this.propertyName, this.propertyValue);
     }));
@@ -372,19 +500,20 @@ var AddPropModal = class extends import_obsidian.Modal {
 };
 
 // src/RemovePropModal.ts
-var import_obsidian2 = require("obsidian");
-var RemovePropModal = class extends import_obsidian2.Modal {
+var import_obsidian7 = require("obsidian");
+var RemovePropModal = class extends import_obsidian7.Modal {
   constructor(app, onSubmit) {
     super(app);
     this.onSubmit = onSubmit;
   }
   onOpen() {
     const { contentEl } = this;
-    contentEl.setText("Remove Property from Selected Tabs");
-    new import_obsidian2.Setting(contentEl).setName("Property Name").addText((text) => text.onChange((value) => {
+    this.titleEl.setText("Remove Property from Selected Tabs");
+    applyModalAppearance(this, { size: "compact" });
+    new import_obsidian7.Setting(contentEl).setName("Property Name").addText((text) => text.onChange((value) => {
       this.propertyName = value;
     }));
-    new import_obsidian2.Setting(contentEl).addButton((btn) => btn.setButtonText("Remove").setCta().onClick(() => {
+    new import_obsidian7.Setting(contentEl).addButton((btn) => btn.setButtonText("Remove").setCta().onClick(() => {
       this.close();
       this.onSubmit(this.propertyName);
     }));
@@ -396,19 +525,20 @@ var RemovePropModal = class extends import_obsidian2.Modal {
 };
 
 // src/AddTagModal.ts
-var import_obsidian3 = require("obsidian");
-var AddTagModal = class extends import_obsidian3.Modal {
+var import_obsidian8 = require("obsidian");
+var AddTagModal = class extends import_obsidian8.Modal {
   constructor(app, onSubmit) {
     super(app);
     this.onSubmit = onSubmit;
   }
   onOpen() {
     const { contentEl } = this;
-    contentEl.setText("Add Tag to Selected Tabs");
-    new import_obsidian3.Setting(contentEl).setName("Tag Name").addText((text) => text.onChange((value) => {
+    this.titleEl.setText("Add Tag to Selected Tabs");
+    applyModalAppearance(this, { size: "compact" });
+    new import_obsidian8.Setting(contentEl).setName("Tag Name").addText((text) => text.onChange((value) => {
       this.tagName = value;
     }));
-    new import_obsidian3.Setting(contentEl).addButton((btn) => btn.setButtonText("Add").setCta().onClick(() => {
+    new import_obsidian8.Setting(contentEl).addButton((btn) => btn.setButtonText("Add").setCta().onClick(() => {
       this.close();
       this.onSubmit(this.tagName);
     }));
@@ -420,19 +550,20 @@ var AddTagModal = class extends import_obsidian3.Modal {
 };
 
 // src/RemoveTagModal.ts
-var import_obsidian4 = require("obsidian");
-var RemoveTagModal = class extends import_obsidian4.Modal {
+var import_obsidian9 = require("obsidian");
+var RemoveTagModal = class extends import_obsidian9.Modal {
   constructor(app, onSubmit) {
     super(app);
     this.onSubmit = onSubmit;
   }
   onOpen() {
     const { contentEl } = this;
-    contentEl.setText("Remove Tag from Selected Tabs");
-    new import_obsidian4.Setting(contentEl).setName("Tag Name").addText((text) => text.onChange((value) => {
+    this.titleEl.setText("Remove Tag from Selected Tabs");
+    applyModalAppearance(this, { size: "compact" });
+    new import_obsidian9.Setting(contentEl).setName("Tag Name").addText((text) => text.onChange((value) => {
       this.tagName = value;
     }));
-    new import_obsidian4.Setting(contentEl).addButton((btn) => btn.setButtonText("Remove").setCta().onClick(() => {
+    new import_obsidian9.Setting(contentEl).addButton((btn) => btn.setButtonText("Remove").setCta().onClick(() => {
       this.close();
       this.onSubmit(this.tagName);
     }));
@@ -444,22 +575,23 @@ var RemoveTagModal = class extends import_obsidian4.Modal {
 };
 
 // src/RenameTagModal.ts
-var import_obsidian5 = require("obsidian");
-var RenameTagModal = class extends import_obsidian5.Modal {
+var import_obsidian10 = require("obsidian");
+var RenameTagModal = class extends import_obsidian10.Modal {
   constructor(app, onSubmit) {
     super(app);
     this.onSubmit = onSubmit;
   }
   onOpen() {
     const { contentEl } = this;
-    contentEl.setText("Rename Tag in Selected Tabs");
-    new import_obsidian5.Setting(contentEl).setName("Old Tag Name").addText((text) => text.onChange((value) => {
+    this.titleEl.setText("Rename Tag in Selected Tabs");
+    applyModalAppearance(this, { size: "compact" });
+    new import_obsidian10.Setting(contentEl).setName("Old Tag Name").addText((text) => text.onChange((value) => {
       this.oldTagName = value;
     }));
-    new import_obsidian5.Setting(contentEl).setName("New Tag Name").addText((text) => text.onChange((value) => {
+    new import_obsidian10.Setting(contentEl).setName("New Tag Name").addText((text) => text.onChange((value) => {
       this.newTagName = value;
     }));
-    new import_obsidian5.Setting(contentEl).addButton((btn) => btn.setButtonText("Rename").setCta().onClick(() => {
+    new import_obsidian10.Setting(contentEl).addButton((btn) => btn.setButtonText("Rename").setCta().onClick(() => {
       this.close();
       this.onSubmit(this.oldTagName, this.newTagName);
     }));
@@ -471,7 +603,7 @@ var RenameTagModal = class extends import_obsidian5.Modal {
 };
 
 // src/main.ts
-var MultiTabPlugin = class extends import_obsidian6.Plugin {
+var MultiTabPlugin = class extends import_obsidian11.Plugin {
   constructor() {
     super(...arguments);
     this.selectedTabs = /* @__PURE__ */ new Set();
@@ -677,7 +809,7 @@ var MultiTabPlugin = class extends import_obsidian6.Plugin {
       isMod = modKeyOrEvent;
       isShift = shiftKey;
     } else if (modKeyOrEvent && typeof modKeyOrEvent === "object") {
-      isMod = import_obsidian6.Keymap.isModifier(modKeyOrEvent, "Mod") || Boolean(modKeyOrEvent.ctrlKey || modKeyOrEvent.metaKey);
+      isMod = import_obsidian11.Keymap.isModifier(modKeyOrEvent, "Mod") || Boolean(modKeyOrEvent.ctrlKey || modKeyOrEvent.metaKey);
       isShift = Boolean(modKeyOrEvent.shiftKey);
     }
     if (isShift && this.lastActiveTab) {
@@ -775,7 +907,7 @@ var MultiTabPlugin = class extends import_obsidian6.Plugin {
     for (const filePath of filePaths) {
       if (typeof filePath !== "string") continue;
       const file = this.app.vault.getAbstractFileByPath(filePath);
-      if (file instanceof import_obsidian6.TFile) {
+      if (file instanceof import_obsidian11.TFile) {
         if (isFirst) {
           baseLeaf = this.app.workspace.getLeaf("tab");
           await baseLeaf.openFile(file);
@@ -800,7 +932,7 @@ var MultiTabPlugin = class extends import_obsidian6.Plugin {
       const viewState = leaf.getViewState();
       if (viewState.type === "markdown" && ((_a = viewState.state) == null ? void 0 : _a.file) && typeof viewState.state.file === "string") {
         const file = this.app.vault.getAbstractFileByPath(viewState.state.file);
-        if (file instanceof import_obsidian6.TFile) {
+        if (file instanceof import_obsidian11.TFile) {
           filePaths.push(file.path);
         }
       }
@@ -814,7 +946,7 @@ var MultiTabPlugin = class extends import_obsidian6.Plugin {
       const model = buildNavigationModel(this.app, activeLeaf);
       return getTabsInWindow(model, win).map((entry) => entry.leaf).filter((leaf) => {
         var _a, _b;
-        return leaf.view instanceof import_obsidian6.MarkdownView || ((_b = (_a = leaf.view) == null ? void 0 : _a.getViewType) == null ? void 0 : _b.call(_a)) === "markdown";
+        return leaf.view instanceof import_obsidian11.MarkdownView || ((_b = (_a = leaf.view) == null ? void 0 : _a.getViewType) == null ? void 0 : _b.call(_a)) === "markdown";
       });
     }
     return this.getAllOpenMarkdownLeaves();
@@ -825,7 +957,7 @@ var MultiTabPlugin = class extends import_obsidian6.Plugin {
   async updateFrontmatterForTabs(leaves, update) {
     for (const leaf of leaves) {
       const view = leaf.view;
-      const file = view instanceof import_obsidian6.MarkdownView ? view.file : null;
+      const file = view instanceof import_obsidian11.MarkdownView ? view.file : null;
       if (!file) continue;
       await this.app.fileManager.processFrontMatter(file, update);
     }

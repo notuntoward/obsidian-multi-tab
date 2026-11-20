@@ -13,7 +13,8 @@ describe('AddTagModal', () => {
         const modal = new AddTagModal(app as any, () => {});
         modal.onOpen();
 
-        expect(modal.contentEl.textContent).toContain('Add Tag to Selected Tabs');
+        expect(modal.titleEl.textContent).toBe('Add Tag to Selected Tabs');
+        expect(modal.modalEl.classList.contains('commons-modal-compact')).toBe(true);
         const textInput = modal.contentEl.querySelector('input[type="text"]');
         const addButton = modal.contentEl.querySelector('button');
 

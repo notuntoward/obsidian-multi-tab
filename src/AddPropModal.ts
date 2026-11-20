@@ -1,4 +1,5 @@
 import { App, Modal, Setting } from 'obsidian';
+import { applyModalAppearance } from 'commons/modal';
 
 export class AddPropModal extends Modal {
     propertyName: string;
@@ -12,7 +13,8 @@ export class AddPropModal extends Modal {
 
     onOpen() {
         const { contentEl } = this;
-        contentEl.setText('Add Property to Selected Tabs');
+        this.titleEl.setText('Add Property to Selected Tabs');
+        applyModalAppearance(this, { size: 'compact' });
 
         new Setting(contentEl)
             .setName('Property Name')

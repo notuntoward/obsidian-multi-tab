@@ -1,4 +1,5 @@
 import { App, Modal, Setting } from 'obsidian';
+import { applyModalAppearance } from 'commons/modal';
 
 export class RenameTagModal extends Modal {
     oldTagName: string;
@@ -12,7 +13,8 @@ export class RenameTagModal extends Modal {
 
     onOpen() {
         const { contentEl } = this;
-        contentEl.setText('Rename Tag in Selected Tabs');
+        this.titleEl.setText('Rename Tag in Selected Tabs');
+        applyModalAppearance(this, { size: 'compact' });
 
         new Setting(contentEl)
             .setName('Old Tag Name')
