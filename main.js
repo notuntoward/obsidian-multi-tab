@@ -115,6 +115,13 @@ function isMainLeaf(app, leaf) {
   const main = getMainWindow(app);
   return !!win && !!main && win === main;
 }
+function isLeafAttached(leaf) {
+  if (isLeafDetached(leaf) || !leaf || !leaf.parent) return false;
+  const win = getWindowForLeaf(leaf);
+  if (!win) return false;
+  const children = getGroupChildren(leaf.parent);
+  return !(children && !children.includes(leaf));
+}
 function getGroupRect(group) {
   try {
     const el = group == null ? void 0 : group.containerEl;
@@ -189,6 +196,7 @@ function getEditorLeafLocations(app) {
   app.workspace.iterateAllLeaves((leaf) => {
     var _a2;
     if (isLeafDetached(leaf) || isSidebarLeaf(app, leaf)) return;
+    if (leaf.parent && !isLeafAttached(leaf)) return;
     const win = getWindowForLeaf(leaf);
     if (!win) return;
     locations.push({ leaf, window: win, group: (_a2 = leaf.parent) != null ? _a2 : null });

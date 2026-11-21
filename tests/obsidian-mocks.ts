@@ -84,6 +84,7 @@ class MockWorkspace {
 
     addLeaf(leaf: MockWorkspaceLeaf) {
         this.leaves.set(leaf.id, leaf);
+        if (!leaf.parent.children.includes(leaf)) leaf.parent.children.push(leaf);
         this.activeLeaf = leaf;
     }
 
